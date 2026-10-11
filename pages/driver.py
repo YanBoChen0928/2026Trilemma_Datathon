@@ -185,10 +185,10 @@ with left:
             m = c.meter
             with st.container(border=True):
                 st.markdown(f"**#{i} · Meter {m.meter_id}**")
-                st.markdown(f"Estimated cost: **${c.result.estimated_cost:.2f}**  \n"
+                st.markdown(f"Estimated cost: **\\${c.result.estimated_cost:.2f}**  \n"
                             f"About {c.distance_m:.0f} m away  \n"
-                            f"Rates: ${m.rate_day:.2f}/h daytime · "
-                            f"${m.rate_evening:.2f}/h evening")
+                            f"Rates: \\${m.rate_day:.2f}/h daytime · "
+                            f"\\${m.rate_evening:.2f}/h evening")
                 for w in c.result.warnings:
                     st.caption(w)
 
