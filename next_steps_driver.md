@@ -5,10 +5,48 @@
 
 ---
 
+## 目前進度（更新於 2026-10-11）
+
+- **現在停在：Step 2 停車表前處理**（預計今天 10am–1pm）。
+- Step 0：大部分完成，還在等組員回覆兩項（見下方）。
+- Step 1：完成，已推到 `YB` 分支；PR `YB → main` 待合併。
+- **開新對話時**：告訴 Claude WD 是 `/Users/yanbochen/IdeaProjects/202610_Datathon_Trilemma`，並請它先讀這三份：`next_steps_driver.md`、`mvp_implementation_handoff_en.md`、`CONTRIBUTING.md`。
+
+## Git 流程（每一步都照這個循環）
+
+本機 `main` 只用來同步，永遠不直接 commit，作為「上次合併完成」的乾淨參考點；開發都在 `YB` 上。
+
+```bash
+# 1. 更新本機 main
+git checkout main
+git pull --no-rebase origin main
+
+# 2. 回到 YB，把最新的 main 併進來
+git checkout YB
+git merge main
+
+# 3. 開發、測試後推送
+git add ...
+git commit -m "..."
+git push
+
+# 4. 在 GitHub 開 PR：YB → main，合併
+gh pr create --base main --head YB --web
+```
+
+YB 出問題時：`git diff main` 比對差異；`git restore --source=main <檔案>` 還原單一檔案。
+
+---
+
 ## Step 0：開工前確認（約 30 分鐘）
 
-- [ ] 依 `CONTRIBUTING.md` 的 Step 0 完成團隊約定：部署平台、整合與部署負責人、共用資料格式、Python 版本與 `requirements.txt`、demo 情境。
-- [ ] 整合與部署由你負責（Anahid 可能一起）：你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
+- [x] 整合與部署負責人：你（Anahid 可能一起）。你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
+- [x] 共用資料格式：照 handoff §6.1、§9.1。
+- [x] Demo 情境：市中心、晚上 6:00 抵達。
+- [x] Python 版本與 `requirements.txt`：見 Step 1。
+- [ ] **等組員回覆**：部署平台（建議 Streamlit Community Cloud）。
+- [ ] **等組員回覆**：Anahid 與 Juwon 的市府視角分工。
+- [ ] 加 Juwon 為 repo 協作者（需要她的 GitHub handle）。
 
 ## Step 1：建立專案結構
 
@@ -27,8 +65,19 @@ requirements.txt
 README.md
 ```
 
-- [ ] `requirements.txt` 先放：`streamlit`、`folium`、`streamlit-folium`、`pandas`、`pytest`。
-- [ ] README 記錄啟動指令與資料快照日期。
+- [x] 虛擬環境：用 pyenv 的 Python 3.11.11 建立 `.venv`（不進 repo）。
+- [x] `requirements.txt`：`streamlit==1.65.0`、`folium==0.20.0`、`streamlit-folium==0.27.4`、`pandas==3.0.6`、`pytest==9.1.1`。
+- [x] `app.py`、`pages/driver.py`、`pages/city.py`（空白頁）、`curbcheck/__init__.py`、`data/raw/`、`tests/`。
+- [x] README：一句話介紹與本機啟動指令（資料快照日期等 Step 2 完成後補上）。
+- [x] `.gitignore`：`archive/`、`.venv/`、`data/raw/`、`__pycache__/`、`.pytest_cache/`、`.DS_Store`。
+- [x] 驗證：三個頁面都能載入、伺服器健康檢查正常。
+
+本機啟動（終端機要保持開著，關掉後頁面連結會變灰色不能點）：
+
+```bash
+source .venv/bin/activate
+streamlit run app.py
+```
 
 ## Step 2：停車表前處理（handoff §6）
 
