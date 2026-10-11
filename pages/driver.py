@@ -438,3 +438,8 @@ else:
         st.dataframe(rows, hide_index=True, width="stretch")
 
 st.info("Posted signs take precedence.")
+st.caption(
+    "Contains information licensed under the "
+    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
+    "Map data © OpenStreetMap contributors."
+)

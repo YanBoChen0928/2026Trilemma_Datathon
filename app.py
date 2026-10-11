@@ -23,3 +23,8 @@ with col2:
     st.caption("See meter rates and where tickets concentrate Downtown.")
 
 st.info("Posted signs take precedence over CurbCheck's results.")
+st.caption(
+    "Contains information licensed under the "
+    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
+    "Map data © OpenStreetMap contributors."
+)
