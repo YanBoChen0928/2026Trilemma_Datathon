@@ -31,6 +31,7 @@ STATUS_STYLE = {  # status -> (marker colour, label)
     "uncertain": ("#bf8700", "Uncertain rule — not recommended"),
     "unsupported": ("#8c959f", "Data not supported"),
 }
+CLOSEST_LEGAL_LABEL = "★ Closest legal option"
 
 
 @st.cache_data
@@ -132,7 +133,21 @@ with right:
         for c in result.candidates:
             status = status_of(c, rec_ids)
             colour, label = STATUS_STYLE[status]
-            if status == "recommended":
+            if status == "legal" and c is result.closest_legal:
+                folium.Marker(
+                    (c.lat, c.lon),
+                    tooltip=tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
+                                    f"Estimated ${c.result.estimated_cost:.2f}"),
+                    icon=folium.DivIcon(
+                        icon_size=(26, 26), icon_anchor=(13, 13),
+                        html=(f"<div style='width:26px;height:26px;border-radius:50%;"
+                              f"background:white;color:{colour};font-size:16px;"
+                              f"line-height:22px;text-align:center;border:2px solid {colour};"
+                              f"box-shadow:0 0 3px #0006'>★</div>"),
+                    ),
+                    z_index_offset=900,
+                ).add_to(fmap)
+            elif status == "recommended":
                 n = rank[c.meter.object_id]
                 folium.Marker(
                     (c.lat, c.lon),
@@ -164,8 +179,9 @@ with right:
         st.rerun()
     st.caption("Distances are approximate straight-line distances, not walking routes. "
                "Map data © OpenStreetMap contributors.")
-    st.caption(" · ".join(f"<span style='color:{c}'>●</span> {l}"
-                          for c, l in STATUS_STYLE.values()), unsafe_allow_html=True)
+    st.caption(" · ".join([f"<span style='color:{c}'>●</span> {l}"
+                           for c, l in STATUS_STYLE.values()] + [CLOSEST_LEGAL_LABEL]),
+               unsafe_allow_html=True)
 
 # --- Results ----------------------------------------------------------------------
 
@@ -191,6 +207,12 @@ with left:
                             f"\\${m.rate_evening:.2f}/h evening")
                 for w in c.result.warnings:
                     st.caption(w)
+
+        near = result.closest_legal
+        if near and near not in result.recommendations:
+            st.markdown(f"★ **Closest legal option:** Meter {near.meter.meter_id}, about "
+                        f"{near.distance_m:.0f} m away, estimated "
+                        f"\\${near.result.estimated_cost:.2f}.")
 
         if not result.recommendations:
             supported = [c for c in result.candidates if c.result.supported]
