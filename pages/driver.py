@@ -16,8 +16,8 @@ from curbcheck.rules import NO_TIME_LIMIT, SAME_DAY_WINDOW_ONLY
 st.set_page_config(page_title="CurbCheck — Driver View", page_icon="🚗", layout="wide")
 
 DOWNTOWN = (49.2820, -123.1180)
-DEMO = {  # provisional demo values (next_steps_driver.md, Step 0)
-    "dest": (49.2827, -123.1207),
+DEMO = {  # 400 W Hastings St, Tuesday 6:00 pm, 2 hours (README, "Demo scenario")
+    "dest": (49.28370197906036, -123.11137913860121),
     "date": date(2026, 10, 13),
     "time": time(18, 0),
     "hours": 2.0,
