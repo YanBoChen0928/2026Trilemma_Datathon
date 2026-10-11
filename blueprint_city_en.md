@@ -60,6 +60,8 @@ Known limitations:
 
 ## 6. Shared Interface
 
+> The authoritative shared-data schemas are defined in `mvp_implementation_handoff_en.md`.
+
 Both views live in **one Streamlit multipage app**, each in its own page file, so neither team blocks the other.
 
 | Item | Agreement |

@@ -7,10 +7,8 @@
 
 ## Step 0：開工前確認（約 30 分鐘）
 
-- [ ] 和 Anahid、Juwon 確認兩件事：**分工**、**部署平台**（handoff §3.3）。
-- [ ] 確認誰建立 Streamlit app 骨架（handoff 建議 Juwon）。如果還沒人負責，你先建一個最小骨架，之後再合併。
-- [ ] 鎖定共用資料檔名稱與欄位：`meters_clean.csv` 依 handoff §6.1。
-- [ ] 鎖定 demo 情境：目的地、日期、**晚上 6:00 抵達**、停留時數。
+- [ ] 依 `CONTRIBUTING.md` 的 Step 0 完成團隊約定：部署平台、整合與部署負責人、共用資料格式、Python 版本與 `requirements.txt`、demo 情境。
+- [ ] 確認 Streamlit app 骨架由誰建立（handoff 建議 Juwon）。如果還沒人負責，你先建一個最小骨架，之後再合併。
 
 ## Step 1：建立專案結構
 
@@ -69,10 +67,13 @@ README.md
 
 **檢查點**：本機用 demo 情境完整操作一次。
 
-## Step 6：整合與部署
+## Step 6：整合與部署（依 `CONTRIBUTING.md` §7）
 
-- [ ] 把駕駛頁面接進共用的 Streamlit app。
-- [ ] 部署一次，確認線上版可以完整操作 demo 情境（handoff 的 Day 2 目標）。
+- [ ] 第 1 天完成 Step 2 後，**先推一版 `meters_clean.csv`**，讓 City View 的費率圖層不必等待。
+- [ ] 本機把駕駛頁面接進共用的 Streamlit app，與 City View 整合。
+- [ ] **第 2 天直接部署完整 MVP**，不先部署空骨架。
+- [ ] 部署後檢查：兩個頁面能開、資料能載入、地圖能顯示、錯誤有合理提示。
+- [ ] 只使用平台內建的執行紀錄，不另外做監控。
 
 ## Step 7：收尾
 

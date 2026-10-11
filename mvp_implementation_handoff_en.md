@@ -78,7 +78,7 @@ These defaults keep the three-day build achievable. If the team does not change 
 Remaining team confirmations:
 
 1. Anahid / Juwon split.
-2. Deployment platform, no later than the end of Day 1.
+2. Deployment platform, no later than the end of Day 1 (recommended: Streamlit Community Cloud; see `CONTRIBUTING.md`).
 
 The UI describes results as **data-based guidance** and costs as **Estimated cost**, never as a legal guarantee or an exact payment amount.
 
@@ -408,22 +408,20 @@ The City pipeline must verify:
 
 ### Step 0 — Confirm Scope and Contracts
 
+- Follow the Step 0 checklist in `CONTRIBUTING.md` (team decisions, shared contracts, environment, demo).
 - Review Section 3 as a team.
-- Confirm the two remaining team decisions in Section 3.3.
-- Freeze CSV columns and filenames.
-- Freeze the demo destination, date, time, and duration.
 
 **Done when:** all three team members are implementing the same rules and schemas.
 
-### Step 1 — Deployable App Shell
+### Step 1 — Runnable Shared App Shell
 
 Suggested owner: Juwon.
 
 - Create the Streamlit entry point and Driver/City pages.
 - Add dependency and run instructions.
-- Render an empty map and deploy once.
+- Render an empty map locally. Deployment is not required at this step; the complete MVP is deployed on Day 2 (see `CONTRIBUTING.md`).
 
-**Done when:** the team has a working URL from a clean build.
+**Done when:** every team member can run the shell locally from a clean environment.
 
 ### Step 2 — Meter Preprocessing
 
