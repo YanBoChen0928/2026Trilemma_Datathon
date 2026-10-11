@@ -29,9 +29,16 @@ When an issue is raised, it comes with a recommendation.
 
 ## 3. Where records go
 
-- Rule-related questions that need a decision: `references.md`, Section 5, status "Open question".
-- Issues the assistant resolved itself: the "Implementation notes" of the related item in `references.md`, Section 5.
-- No new documents are created for these records, so that information stays in one place.
+The handoff is the main document. Each kind of record has one home:
+
+| Content | Where it goes |
+| --- | --- |
+| Decisions themselves (rules, scope, UI) | `mvp_implementation_handoff_en.md`, the single engineering source of truth |
+| Official sources and interpretations behind parking rules; rule questions that need a decision | `references.md`, Section 5 (status "Open question" while undecided) |
+| Reasons for a scope change | `meter_data_decisions_en.md` (for example, item 4) |
+| Small issues the assistant resolved itself | The "Implementation notes" of the related item in `references.md` Section 5, or one sentence in the relevant handoff section |
+
+No new documents are created for these records, so that information stays in one place.
 
 ## 4. Progress first
 

@@ -121,6 +121,7 @@ The UI describes results as **data-based guidance** and costs as **Estimated cos
 - Driver block heads-up using the City ticket aggregate.
 - Additional City filters such as weekday or infraction category.
 - Support for flat-rate meter records after their semantics are verified.
+- Destination search by street name or address. It requires an address-lookup service or dataset, which must be approved before it is added (Section 15).
 
 ### 4.3 Out of Scope
 
@@ -282,7 +283,7 @@ A stay within a single window is evaluated normally, since A and B give the same
 
 ## 8. Driver UI Requirements
 
-- Map click sets the destination.
+- Map click sets the destination. Latitude and longitude inputs are available in a collapsed "Advanced" section for testing and reproducible checks.
 - Inputs: date, arrival time, and duration.
 - Show the currently supported scope beside the inputs.
 - Include stable default demo values or a `Load demo example` action.
