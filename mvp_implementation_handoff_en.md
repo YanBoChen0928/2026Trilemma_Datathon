@@ -50,7 +50,7 @@ These defaults keep the three-day build achievable. If the team does not change 
 
 | Decision | Recommended MVP default | Reason |
 | --- | --- | --- |
-| Supported stay | Same calendar day, arrival and departure between 9:00 am and 10:00 pm | Avoid overnight and cross-day rule ambiguity while preserving the important 6:00 pm transition |
+| Supported stay | Up to 24 hours, crossing at most one midnight. The Day 2 deployment may restrict this to same-day 9:00 am–10:00 pm through a configuration value until the timeline tests in Section 12 pass | Supports evening and late-night drivers with one timeline engine (`references.md` §5.11) |
 | Date input | Full date plus arrival time and duration | Required for Tuesday-only, weekday, and weekend restrictions |
 | Vehicle support | Ordinary passenger vehicles; recommend only records whose rules apply to `Any Vehicle` | Avoid vehicle-specific eligibility logic in the MVP |
 | Search radius | 250 m straight-line radius | No routing service is required; label the result as approximate distance, not walking-route distance |
@@ -71,7 +71,9 @@ These defaults keep the three-day build achievable. If the team does not change 
 | Flat-rate records | Excluded from recommendations. |
 | Null limits or rates | Never treated as free, unrestricted, or `No Time Limit`; the record is unsupported. |
 | Override flags | `time_limit_override == "Yes"` or `prohibition_override == "Yes"` makes the record unsupported until official semantics are found. |
-| Overnight stays | A departure after 10:00 pm is unsupported (Section 7.2, step 2). |
+| Overnight stays | 10:00 pm–9:00 am is free and does not consume the meter time limit; the limit restarts at 9:00 am (`references.md` §5.2, §5.11). |
+| Rush-hour days | Rush-hour intervals are applied every day, because the data does not list days (`references.md` §5.4). |
+| General three-hour rule | If more than 180 minutes of the stay fall between 8:00 am and 6:00 pm on any day and no definite violation is found, `legal=None` (`references.md` §5.9). |
 | Water-ticket filter | The ticket-processing owner decides the rule and records it in the README. |
 | Downtown definition | The ticket-processing owner decides the definition and records it in the README. |
 
@@ -91,7 +93,7 @@ The UI describes results as **data-based guidance** and costs as **Estimated cos
 - Destination selected on a real map.
 - Arrival date, arrival time, and duration inputs.
 - Candidate meter records within a 250 m straight-line radius.
-- Legality evaluation for supported records across daytime and evening windows.
+- Legality evaluation for supported records across daytime, evening, and overnight segments.
 - Rush-hour and prohibition-overlap checks.
 - Estimated cost across supported time windows.
 - Up to three legal recommendations, sorted by estimated cost and then approximate distance.
@@ -122,7 +124,7 @@ The UI describes results as **data-based guidance** and costs as **Estimated cos
 
 ### 4.3 Out of Scope
 
-- Overnight or cross-day stays in the initial MVP.
+- Stays longer than 24 hours or crossing more than one midnight.
 - Real-time space availability.
 - Route-based walking distance.
 - Parkade availability or pricing.
@@ -151,6 +153,7 @@ Use a dated local snapshot for every external dataset used in the demo. Record t
 
 | Column | Meaning |
 | --- | --- |
+| `object_id` | Unique source record key; use this for joins and lookups |
 | `meter_id` | Source meter identifier |
 | `lat`, `lon` | WGS84 coordinates |
 | `local_area` | City local area |
@@ -161,49 +164,57 @@ Use a dated local snapshot for every external dataset used in the demo. Record t
 | `rate_day` | Parsed 9:00 am–6:00 pm hourly rate |
 | `rate_evening` | Parsed 6:00 pm–10:00 pm hourly rate |
 | `flat_rate_raw` | Unmodified source flat-rate text |
-| `limit_day_min` | Parsed weekday daytime limit in minutes; explicit sentinel for no limit |
-| `limit_evening_min` | Parsed weekday evening limit in minutes; explicit sentinel for no limit |
-| `limit_weekend_day_min` | Parsed weekend daytime limit in minutes |
-| `limit_weekend_evening_min` | Parsed weekend evening limit in minutes |
+| `limit_day_min` | Parsed weekday daytime limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_evening_min` | Parsed weekday evening limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_weekend_day_min` | Parsed weekend daytime limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_weekend_evening_min` | Parsed weekend evening limit in minutes; `-1` = `No Time Limit`; null = missing data |
 | `am_rush_start`, `am_rush_end` | Parsed AM rush interval |
 | `pm_rush_start`, `pm_rush_end` | Parsed PM rush interval |
-| `prohibition_1_days` | Days when the first special restriction applies |
-| `prohibition_1_time` | Time range for the first special restriction |
+| `prohibition_1_days` | Original source text for days when the first special restriction applies |
+| `prohibition_1_time` | Original source time text for the first special restriction |
 | `prohibition_1_zone` | First restriction type, such as loading, taxi, or no stopping |
-| `prohibition_2_days` | Days when the second special restriction applies |
-| `prohibition_2_time` | Time range for the second special restriction |
+| `prohibition_1_start_min`, `prohibition_1_end_min` | Parsed first-restriction endpoints as minutes after midnight |
+| `prohibition_1_crosses_midnight` | Boolean: the first restriction continues into the following calendar day |
+| `prohibition_1_all_day` | Boolean: the first restriction is the literal `Anytime` |
+| `prohibition_2_days` | Original source text for days when the second special restriction applies |
+| `prohibition_2_time` | Original source time text for the second special restriction |
 | `prohibition_2_zone` | Second restriction type |
+| `prohibition_2_start_min`, `prohibition_2_end_min` | Parsed second-restriction endpoints as minutes after midnight |
+| `prohibition_2_crosses_midnight` | Boolean: the second restriction continues into the following calendar day |
+| `prohibition_2_all_day` | Boolean: the second restriction is the literal `Anytime` |
 | `supported` | Boolean: the MVP can safely evaluate this record |
 | `unsupported_reason` | Human-readable reason when `supported == false` |
 
-Do not collapse prohibition days, time, and zone into one unstructured field. They are needed separately for rule evaluation and explanations.
+Keep all 34 original source columns unchanged in `meters_clean.csv`, and add parsed columns under distinct names. Do not collapse prohibition days, time, and zone into one unstructured field. They are needed separately for rule evaluation and explanations.
 
 ### 6.2 Driver Preprocessing Rules
 
-1. Keep the original raw value while creating every parsed value.
+1. Keep all 34 original source columns unchanged while creating every parsed value under a distinct column name.
 2. Mark records not in service as unsupported.
 3. For the initial MVP, mark vehicle-specific records as unsupported unless applicability to an ordinary passenger vehicle is explicitly handled.
 4. Parse `$5.00` into `5.00`; do not convert a missing rate to zero.
 5. Parse `30 Min`, `2 Hr`, `3 Hr`, `4 Hr`, and `13 Hr` into minutes.
-6. Represent the literal `No Time Limit` separately from null or unparseable data.
-7. Preserve and evaluate both prohibition groups.
+6. Represent the literal `No Time Limit` as `-1` in the parsed minute columns, separately from null (missing data) and unparseable values. The rules engine must check for `-1` before comparing a stay with a limit.
+7. Preserve and parse both prohibition groups over the full 24-hour timeline; never clip them to the currently enabled UI window. Parse `Noon` as 720 minutes, an ending `Midnight` as 1440 minutes, and `Anytime` as 0–1440 with the corresponding `*_all_day` flag. Keep the parsed start and end values and set `*_crosses_midnight = True` when the end is earlier than the start. A cross-midnight prohibition is anchored to its listed start day, and its after-midnight portion continues into the following calendar day.
 8. Do not recommend a record with a flat-rate option until flat-rate semantics are confirmed.
-9. Produce a preprocessing report containing total records, supported records, unsupported records by reason, and parse failures by field.
+9. Write a preprocessing report to `data/meters_preprocessing_report.json` (committed alongside `meters_clean.csv`) containing the dataset ID, source URL, snapshot file name, download timestamp, total records, supported records, unsupported records by reason, parse failures by field, and duplicate `meter_id` counts. Use `object_id`, not `meter_id`, as the unique record key.
 10. If `time_limit_override == "Yes"`: `supported = False`, `unsupported_reason = "Time-limit override semantics not verified."`
 11. If `prohibition_override == "Yes"`: `supported = False`, `unsupported_reason = "Prohibition override semantics not verified."`
-12. If a required weekday daytime or evening limit or rate is null, mark the record unsupported.
+12. If any required weekday or weekend daytime/evening limit, or either hourly rate, is null, mark the record unsupported.
 13. Mark any value that cannot be parsed as unsupported; never guess.
+14. Treat each rush-hour interval (start and end) and each prohibition group (days, time, and zone) as a unit. A fully blank unit means no such restriction is listed. A partially filled unit, or a filled unit that cannot be parsed, makes the record unsupported. Verify against the raw snapshot that blank fields mean "no restriction listed" before relying on this rule.
+15. If `lat` or `lon` is missing, non-numeric, or outside the valid latitude/longitude range, mark the record unsupported.
 
 ### 6.3 Current Evaluable Volume (Snapshot)
 
-After the filters above (In Service, `Any Vehicle`, no flat rate, both overrides `No`, required limits and rates present):
+After all rules above, including treating the partially filled prohibition group on record `291103` as unsupported:
 
 | Scope | Records |
 | --- | --- |
-| Citywide | 2,761 |
-| Downtown (`local_area == "Downtown"`) | 637 |
+| Citywide | 2,760 |
+| Downtown (`local_area == "Downtown"`) | 636 |
 
-These figures come from the City open data API, queried 2026-10-10. They are a data snapshot, not constants. They are the records that can be passed to the rules engine; they do not mean every record will be recommended for a given stay. Do not present the raw `Any Vehicle` count (3,394) as the number of recommendable meters.
+These figures come from the 3,642-record City open data snapshot downloaded 2026-10-11T19:11:12Z. They are a data snapshot, not constants. They are the records that can be passed to the rules engine; they do not mean every record will be recommended for a given stay. Do not present the raw `Any Vehicle` count (3,394) as the number of recommendable meters.
 
 ## 7. Driver Rules Engine
 
@@ -232,32 +243,25 @@ Use `legal=None` when the data cannot support a verdict. Do not return `legal=Tr
 ### 7.2 Evaluation Order
 
 1. Validate arrival date/time and positive duration.
-2. If departure is after 10:00 pm (including any departure on a different calendar date):
-
-   ```
-   supported = False
-   legal = None
-   reason = "Overnight stays are not supported in the MVP. Meter parking is generally free after 10:00 pm, but posted restrictions and next-morning rules still apply."
-   ```
-
-   Do not calculate costs after 10:00 pm or next-day time limits in the MVP.
-3. If arrival is before 9:00 am, return unsupported (outside the supported 9:00 am–10:00 pm window).
+2. If the stay is longer than 24 hours or crosses more than one midnight, return unsupported: "Stays longer than 24 hours or crossing more than one midnight are not supported." While the Day 2 configuration restricts the supported window (Section 3.2), a stay outside same-day 9:00 am–10:00 pm is unsupported with a reason that states the current scope.
+3. Split the stay into segments at 9:00 am, 6:00 pm, 10:00 pm, and midnight. Daytime (9:00 am–6:00 pm) and evening (6:00 pm–10:00 pm) segments are paid; the overnight segment (10:00 pm–9:00 am) is free and does not consume the meter time limit.
 4. Reject unsupported or inactive records (Section 6.2).
-5. Select weekday or weekend limits from the actual date.
-6. Check overlap with AM and PM rush intervals. Any overlap sets `legal=False`. An AM rush interval such as 7:00–9:30 am still overlaps a stay that starts at 9:00 am.
-7. Check both prohibition intervals against the date and the complete stay.
-8. Split the stay at the 6:00 pm boundary.
-9. Apply the tri-state time-limit rule (Section 7.4).
-10. Estimate cost: for each window, minutes ÷ 60 × that window's hourly rate, then sum. Label it **Estimated cost**.
-11. Return structured reasons and warnings.
+5. For each paid segment, select weekday or weekend limits from that segment's calendar date.
+6. Check overlap with AM and PM rush intervals on every day of the stay. Any overlap sets `legal=False`. An AM rush interval such as 7:00–9:30 am overlaps both a stay that starts at 9:00 am and an overnight stay that ends after 7:00 am.
+7. Check both prohibition intervals against the complete stay, using each segment's actual calendar date. A prohibition interval that crosses midnight belongs to the day on which it starts.
+8. Check the meter time limit within each paid period. The limit restarts at 9:00 am after the free overnight segment. At the 6:00 pm boundary, apply the tri-state rule (Section 7.4).
+9. Apply the general three-hour guard: if more than 180 minutes of the stay fall between 8:00 am and 6:00 pm on any calendar day, the result is at most `legal=None`, with the reason "This stay may exceed Vancouver's general three-hour daytime parking rule. Exceptions may apply." Exactly 180 minutes does not trigger the guard.
+10. Combine results: any `False` gives `legal=False`; otherwise any `None` gives `legal=None`; otherwise `legal=True`. Keep all reasons.
+11. Estimate cost: for each paid segment, minutes ÷ 60 × that segment's hourly rate, then sum; overnight segments cost $0. Label it **Estimated cost**.
+12. Return structured reasons and warnings.
 
 ### 7.3 Ranking
 
-1. Remove unsupported and illegal records from recommendations.
+1. Recommend only records where `supported == True` and `legal == True`. Records with `legal == False` or `legal == None` are never recommended.
 2. Sort legal records by estimated cost ascending.
 3. Break ties by straight-line distance ascending.
 4. Return at most three records.
-5. Separately evaluate the geographically closest record so the UI can explain why it was rejected, if applicable.
+5. Separately evaluate the geographically closest record so the UI can explain why it was rejected, if applicable, including when it is unsupported or `legal == None`.
 
 The UI must label distance as approximate. It must not call straight-line distance a walking-route distance.
 
@@ -399,7 +403,18 @@ The Driver rules engine must pass these deterministic tests first:
 7. Null limit → unsupported.
 8. Out-of-service record → unsupported.
 
-Add after the core works: second prohibition overlap, literal `No Time Limit`, flat-rate record, departure after 10:00 pm, and cross-day departure.
+Add after the core works: second prohibition overlap, literal `No Time Limit`, and flat-rate record.
+
+Timeline tests, required before the Day 2 restriction (Section 3.2) is removed:
+
+1. 11:00 pm–6:00 am, no restrictions: estimated cost $0, `legal=True`.
+2. 7:00 pm–1:00 am at a meter with a `6:00pm to 2:00am` taxi-zone prohibition: `legal=False`.
+3. 7:00 pm–1:00 am at a meter with a 4-hour evening limit and no restrictions: the evening limit is not exceeded (3 hours before 10:00 pm).
+4. Saturday 1:00–8:00 am at a meter with a `Mon-Fri` prohibition covering that time: the prohibition does not apply (actual calendar day).
+5. 1:00–8:00 am at a meter with a `7:00am to 9:30am` AM rush interval: `legal=False`.
+6. Overnight at a `3 Hr` meter until 12:00 pm the next day: `legal=None` (three-hour guard); the same stay until 11:00 am does not trigger the guard.
+7. A stay longer than 24 hours, or crossing two midnights: unsupported.
+8. Three-hour guard, same day: `4 Hr`, 9:00 am–1:00 pm → `None`; `4 Hr`, 9:00 am–12:00 pm → guard not triggered (exactly 180 minutes); `No Time Limit`, 9:00 am–1:00 pm → `None`; `3 Hr`, 9:00 am–1:00 pm → `False` (meter limit).
 
 The City pipeline must verify:
 

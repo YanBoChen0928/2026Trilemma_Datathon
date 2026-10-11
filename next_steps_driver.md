@@ -5,10 +5,49 @@
 
 ---
 
+## 目前進度（更新於 2026-10-11）
+
+- **現在停在：Step 2 停車表前處理**（預計今天 10am–1pm）。
+- Step 0：大部分完成，還在等組員回覆兩項（見下方）。
+- Step 1：完成，已推到 `YB` 分支；PR `YB → main` 待合併。
+- **開新對話時**：告訴 Claude WD 是 `/Users/yanbochen/IdeaProjects/202610_Datathon_Trilemma`，並請它先讀這四份：`next_steps_driver.md`、`mvp_implementation_handoff_en.md`、`CONTRIBUTING.md`、`ai_collaboration_en.md`。
+
+## Git 流程（每一步都照這個循環）
+
+本機 `main` 只用來同步，永遠不直接 commit，作為「上次合併完成」的乾淨參考點；開發都在 `YB` 上。
+
+```bash
+# 1. 更新本機 main
+git checkout main
+git pull --no-rebase origin main
+
+# 2. 回到 YB，把最新的 main 併進來
+git checkout YB
+git merge main
+
+# 3. 開發、測試後推送
+git add ...
+git commit -m "..."
+git push
+
+# 4. 在 GitHub 開 PR：YB → main，合併
+gh pr create --base main --head YB --web
+```
+
+YB 出問題時：`git diff main` 比對差異；`git restore --source=main <檔案>` 還原單一檔案。
+
+---
+
 ## Step 0：開工前確認（約 30 分鐘）
 
-- [ ] 依 `CONTRIBUTING.md` 的 Step 0 完成團隊約定：部署平台、整合與部署負責人、共用資料格式、Python 版本與 `requirements.txt`、demo 情境。
-- [ ] 整合與部署由你負責（Anahid 可能一起）：你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
+- [x] 整合與部署負責人：你（Anahid 可能一起）。你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
+- [x] 共用資料格式：照 handoff §6.1、§9.1。
+- [x] Demo 情境：市中心、2026-10-13（星期二，平日）晚上 6:00 抵達、停留 2 小時。
+- [ ] Demo 目的地：Step 4 完成後，在市中心試幾個地點，挑「最近的停車表不能推薦、附近仍有合法選項」的地點；做 `Load demo example` 前要確定。
+- [x] Python 版本與 `requirements.txt`：見 Step 1。
+- [ ] **等組員回覆**：部署平台（建議 Streamlit Community Cloud）。
+- [ ] **等組員回覆**：Anahid 與 Juwon 的市府視角分工。
+- [ ] 加 Juwon 為 repo 協作者（需要她的 GitHub handle）。
 
 ## Step 1：建立專案結構
 
@@ -27,34 +66,51 @@ requirements.txt
 README.md
 ```
 
-- [ ] `requirements.txt` 先放：`streamlit`、`folium`、`streamlit-folium`、`pandas`、`pytest`。
-- [ ] README 記錄啟動指令與資料快照日期。
+- [x] 虛擬環境：用 pyenv 的 Python 3.11.11 建立 `.venv`（不進 repo）。
+- [x] `requirements.txt`：`streamlit==1.65.0`、`folium==0.20.0`、`streamlit-folium==0.27.4`、`pandas==3.0.6`、`pytest==9.1.1`。
+- [x] `app.py`、`pages/driver.py`、`pages/city.py`（空白頁）、`curbcheck/__init__.py`、`data/raw/`、`tests/`。
+- [x] README：一句話介紹與本機啟動指令（資料快照日期等 Step 2 完成後補上）。
+- [x] `.gitignore`：`archive/`、`.venv/`、`data/raw/`、`__pycache__/`、`.pytest_cache/`、`.DS_Store`。
+- [x] 驗證：三個頁面都能載入、伺服器健康檢查正常。
+
+本機啟動（終端機要保持開著，關掉後頁面連結會變灰色不能點）：
+
+```bash
+source .venv/bin/activate
+streamlit run app.py
+```
 
 ## Step 2：停車表前處理（handoff §6）
 
 - [ ] 從市府開放資料下載 `parking-meters`，存成有日期的快照。
-- [ ] 保留原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）。
+- [ ] 保留全部 34 個原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）；使用 `object_id` 作為唯一鍵，`meter_id` 只用於顯示。
+- [ ] 禁停時段完整保留 24 小時，不依目前 UI 範圍裁切；解析 `Noon`、`Midnight`、`Anytime`，並輸出每組禁停的 start/end minutes、`crosses_midnight` 與 `all_day`。
 - [ ] 依 §6.2 標記 `supported` 與 `unsupported_reason`：
   - 非 In Service、非 `Any Vehicle`、有固定費率
   - `time_limit_override` 或 `prohibition_override` 為 Yes
-  - 必要的費率或時限為空值、無法解析
-- [ ] 輸出 `data/meters_clean.csv` 與前處理報告。
+  - 必要的費率或時限（平日與週末）為空值、無法解析
+  - 尖峰或禁停欄位只填了一部分，或有值但無法解析（整組空白＝沒有該項限制，需先核對原始資料）
+  - 座標缺失或無效
+- [ ] 時限欄位：`No Time Limit` 寫成 `-1`，空值代表資料缺失。
+- [ ] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）；報告包含資料集 ID、來源 URL、下載時間、原始與 supported 筆數、各 unsupported 原因、解析失敗欄位與重複 `meter_id` 數量。
 
-**檢查點**：可評估筆數應接近全市 2,761、市中心 637（§6.3）。差很多就先查原因。
+**檢查點**：2026-10-11 快照的可評估筆數應為全市 2,760、市中心 636（§6.3）。未來快照可有差異，但必須由前處理報告解釋；差很多就先查原因。
 
 ## Step 3：規則引擎與測試（handoff §7、§12）
 
 - [ ] 寫純函式 `evaluate_meter(meter, arrival_datetime, duration_minutes)`，不依賴 Streamlit。
-- [ ] 依 §7.2 的順序實作：晚上 10 點後不支援 → 早於 9 點不支援 → 停用資料 → 平日 / 週末時限 → 尖峰重疊（含 9:00–9:30）→ 兩組禁停 → 6 點切分 → 三種結果判斷（§7.4）→ 按分鐘比例估算費用。
-- [ ] 先通過 §12 的 8 個測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
+- [ ] 依 §7.2 的時間軸流程實作：超過 24 小時或跨兩次午夜不支援 → 在 9:00、18:00、22:00、午夜分段 → 停用資料 → 依每段日期選平日 / 週末時限 → 尖峰重疊（每天套用）→ 兩組禁停（依實際日期）→ 停車表時限（9 點重新計時、6 點用三態規則 §7.4）→ 三小時規則 → 合併結果（`False` > `None` > `True`）→ 估算費用（夜間 $0）。
+- [ ] 支援範圍做成設定值：Day 2 部署先限制在同日 9:00 am–10:00 pm。
+- [ ] 先通過 §12 的 8 個基本測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
+- [ ] 時間軸測試（§12）通過後，解除 Day 2 的範圍限制。
 
 **檢查點**：不開 Streamlit，單獨跑 `pytest` 全部通過。
 
 ## Step 4：排序（handoff §7.3）
 
 - [ ] 用直線距離找出 250 公尺內的停車表。
-- [ ] 排除 unsupported 與不合法，依估算費用、再依距離排序，取前三。
-- [ ] 另外評估「最近的停車表」，以便說明它為什麼不能停。
+- [ ] 只推薦 `supported == True` 且 `legal == True` 的停車表（`legal` 為 `False` 或 `None` 都不推薦），依估算費用、再依距離排序，取前三。
+- [ ] 另外評估「最近的停車表」，以便說明它為什麼不能停（包含 unsupported 或 `legal == None` 的情況）。
 
 ## Step 5：駕駛頁面（handoff §8）
 
