@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CurbCheck — Datathon Proposal v0.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--font:"Overpass","Highway Gothic","Arial Narrow",system-ui,sans-serif;--paper:#EEF0F2;--ink:#2A2D33;--muted:#5B6068;--rule:#CDD1D7;--panel:#FFFFFF;--chip:#E1E4E8;--accent:#F2C230;--sign:#1F4E9C;--ticket:#C8342B;--ok:#2E7D4F;--free:#9AA3AD;--city:#6B4FA0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1E2126;--ink:#E8EAED;--muted:#A4AAB3;--rule:#3A3F47;--panel:#272B31;--chip:#31363D;--sign:#2F63B8;--ok:#5FBF86;--free:#5D6570;--city:#A78BDA}}
+:root[data-theme="dark"]{--paper:#1E2126;--ink:#E8EAED;--muted:#A4AAB3;--rule:#3A3F47;--panel:#272B31;--chip:#31363D;--sign:#2F63B8;--ok:#5FBF86;--free:#5D6570;--city:#A78BDA}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.6}
+.bar{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar .in{max-width:860px;margin:0 auto;padding:10px 20px;font-weight:800}
+main{max-width:860px;margin:0 auto;padding:28px 20px 80px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin:8px 0 18px}
+.post{display:flex;flex-direction:column;align-items:center}
+.sign{width:116px;background:var(--sign);color:#fff;border:4px solid #fff;outline:2px solid var(--sign);border-radius:6px;text-align:center;padding:8px 6px 10px}
+.sign .p{font-size:66px;font-weight:900;line-height:.9}.sign .t{font-size:15px;font-weight:800;line-height:1.2}
+.sign.red{background:#fff;color:var(--ticket);outline-color:var(--ticket);margin-top:6px}
+.pole{width:9px;height:44px;background:linear-gradient(90deg,#8B9099,#C9CDD3,#8B9099)}
+.curb{width:136px;height:11px;background:var(--accent);border-radius:2px}
+h1{font-size:clamp(34px,6vw,50px);line-height:1.05;margin:0 0 10px;font-weight:900;letter-spacing:-.015em}
+.lede{font-size:19px;color:var(--muted);margin:0;max-width:54ch}
+h2{font-size:26px;margin:52px 0 10px;font-weight:900;border-left:8px solid var(--accent);padding-left:12px;line-height:1.2}
+h3{font-size:19px;margin:0 0 6px;font-weight:800}
+p,li{max-width:72ch} ul,ol{padding-left:22px} li{margin:4px 0}
+hr{border:0;border-top:1px solid var(--rule);margin:40px 0 0}
+code{font-size:.88em;background:var(--chip);padding:1px 5px;border-radius:3px;white-space:nowrap}
+strong{font-weight:800}
+.meta{color:var(--muted);font-size:15px;line-height:1.55}
+.tw{overflow-x:auto;margin:12px 0 18px;border-top:3px solid var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--rule)}
+th{font-weight:800;background:var(--panel)}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.view{background:var(--panel);border:1px solid var(--rule);border-top:6px solid var(--sign);border-radius:6px;padding:14px 16px}
+.view.city{border-top-color:var(--city)}
+.view ul{margin:0;padding-left:20px;font-size:15.5px}
+.meterday{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:16px 16px 10px;margin:12px 0 18px}
+.meterday .cap{font-weight:800;margin:0 0 10px}
+.track,.ptrack{position:relative;height:38px;background:var(--chip);border-radius:4px}
+.seg{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;overflow:hidden;color:#fff;border-right:2px solid var(--panel)}
+.seg span{padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg.day{background:var(--sign)}.seg.eve{background:#4F78BD}.seg.rush{background:var(--ticket)}.seg.free{background:var(--free)}
+.ticks{position:relative;height:20px;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.ticks span{position:absolute;transform:translateX(-50%)}.ticks span:first-child{transform:none}
+.plan{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;align-items:center;margin:8px 0}
+.pname{font-weight:700;font-size:14px}.ptrack{height:14px}
+.pbar{position:absolute;top:0;bottom:0;border-radius:3px}.pbar.bad{background:var(--ticket)}.pbar.ok{background:var(--ok)}
+.pverdict{grid-column:2;font-size:14px;font-weight:700}.pverdict.ok{color:var(--ok)}.pverdict.bad{color:var(--ticket)}
+@media (max-width:620px){body{font-size:16px}.hero{grid-template-columns:1fr}.post{display:none}.views{grid-template-columns:1fr}.plan{grid-template-columns:1fr}.pverdict{grid-column:1}.seg span{font-size:11px}}
+@media print{.bar{display:none}}
+</style></head><body>
+<nav class="bar"><div class="in">CurbCheck — Datathon Proposal (v0.3)</div></nav>
+<main><section class="hero"><div class="post" aria-hidden="true"><div class="sign"><div class="p">P</div><div class="t">2 HR<br>9AM–6PM</div></div><div class="sign red"><div class="t">NO PARKING<br>3PM–6PM</div></div><div class="pole"></div><div class="curb"></div></div>
+<div><h1>CurbCheck</h1><p class="lede">One problem, two views: help drivers park legally across their whole stay, and show the City where its rules trip people up.</p></div></section><div class="meta">Status: Draft v0.3 · Team of 3 · 3 build days · Demo Day: Tue 10/13<br>This version combines three proposals: Anahid's revised proposal (block cards, data-cleaning details), a teammate's City-facing problem statement (pricing and enforcement analysis), and Yan-Bo's v0.2 (time-window cost and legality guide).<br>Event: Trilemma × Northeastern Datathon, Vancouver (rules TBC)</div>
+<hr>
+<h2 id="1-one-sentence-value">1. One-Sentence Value</h2>
+<p>Vancouver's street parking rules switch by time of day, and drivers get them wrong. CurbCheck helps <strong>drivers</strong> see whether their whole stay is legal and what it will cost, and shows the <strong>City</strong> where its rules trip people up most.</p>
+<h2 id="2-problem">2. Problem</h2>
+<ul><li><strong>Rules switch by time of day</strong>: daytime and evening rates differ, time limits differ, rush-hour restrictions apply, and meters are free after 10 pm. In the meter data, about 92% of meters have different daytime and evening time limits.</li><li><strong>Drivers slip up when a stay crosses a time boundary</strong>, like parking at 5 pm in a spot restricted from 3 to 6 pm. Existing tools (PayByPhone for payment, SpotAngels and ParkMe for prices) rarely check whether a whole stay is legal.</li><li><strong>The City lacks a combined view</strong>: it publishes ticket and meter data, but no tool puts the rules next to where people actually get them wrong, which makes it hard to see where signs or rules need work.</li></ul>
+<h2 id="3-who-it-s-for">3. Who It's For</h2>
+<div class="tw"><table><thead><tr><th>View</th><th>Users</th><th>Question they want answered</th></tr></thead><tbody><tr><td><strong>Driver</strong> (demo lead)</td><td>Drivers heading downtown, delivery and service drivers, visitors</td><td>"I need 3 hours from 5 pm — where nearby is legal and cheap?"</td></tr><tr><td><strong>City</strong></td><td>Parking management, enforcement, transportation planners</td><td>"Which areas and infraction types are most concentrated? Are our rules easy to get wrong?"</td></tr></tbody></table></div>
+<p><strong>Not for</strong>: finding an open spot right now. No public real-time occupancy data exists.</p>
+<h2 id="4-worked-example-downtown-meter-081034">4. Worked Example: Downtown Meter <code>081034</code></h2><figure class="meterday" aria-label="Meter 081034 rules across a weekday, with three example stays"><p class="cap">Meter <code>081034</code> on a weekday</p><div class="plan"><div class="pname">Meter rules</div><div><div class="track"><div class="seg day" style="left:0.00%;width:42.86%"><span>$5.00/hr · 2 hr max</span></div><div class="seg rush" style="left:42.86%;width:21.43%"><span>Rush hours 3–6 pm</span></div><div class="seg eve" style="left:64.29%;width:28.57%"><span>$3.50/hr · 4 hr max</span></div><div class="seg free" style="left:92.86%;width:7.14%"><span>Free</span></div></div><div class="ticks"><span style="left:0.00%">9am</span><span style="left:21.43%">12pm</span><span style="left:42.86%">3pm</span><span style="left:64.29%">6pm</span><span style="left:85.71%">9pm</span></div></div></div><div class="plan"><div class="pname">Arrive 1 pm, 3 hr</div><div class="ptrack"><div class="pbar bad" style="left:28.57%;width:21.43%"></div></div><div class="pverdict bad">❌ Over the 2 hr limit and into rush hours</div></div><div class="plan"><div class="pname">Arrive 5 pm, 3 hr</div><div class="ptrack"><div class="pbar bad" style="left:57.14%;width:21.43%"></div></div><div class="pverdict bad">❌ Starts inside rush hours</div></div><div class="plan"><div class="pname">Arrive 6 pm, 3 hr</div><div class="ptrack"><div class="pbar ok" style="left:64.29%;width:21.43%"></div></div><div class="pverdict ok">✅ Legal · $10.50 total</div></div></figure>
+<p>Rules: daytime (9am–6pm) $5.00/hr, 2-hour limit; evening (6pm–10pm) $3.50/hr, 4-hour limit; PM rush hours 3pm–6pm.</p>
+<div class="tw"><table><thead><tr><th>Your plan</th><th>CurbCheck's answer</th></tr></thead><tbody><tr><td>Arrive 1 pm, stay 3 hours</td><td>❌ Daytime limit is 2 hours, and rush hours start at 3 pm</td></tr><tr><td>Arrive 5 pm, stay 3 hours</td><td>❌ 5–6 pm falls in rush hours; you can't park here</td></tr><tr><td>Arrive 6 pm, stay 3 hours</td><td>✅ Evening rate, $10.50 total, within the 4-hour limit</td></tr></tbody></table></div>
+<p>(Rush hours typically mean no parking or tow-away; confirm the exact rule against posted signs.)</p>
+<h2 id="5-two-views-one-map">5. Two Views, One Map</h2>
+<p>A "Driver / City" toggle at the top switches views on the same meter map.</p>
+<div class="views"><section class="view drv"><h3>Driver view</h3><ul><li>Tap a destination on the map, then enter arrival time and duration.</li><li>See the top three options within walking distance that are <strong>legal for the whole stay</strong>, sorted by total cost and walking distance.</li><li>Get a block heads-up, e.g., "The most common ticket near here is an expired meter."</li></ul></section><section class="view city"><h3>City view</h3><ul><li>Map layers: rates by area, ticket concentration, and coloring by infraction type.</li><li>Hour-of-day pattern of 311 parking enforcement requests (tickets have no time; requests do).</li><li>Two or three key insights, e.g., "Blocks where one infraction type is unusually concentrated may have unclear signs or rules."</li></ul></section></div>
+<h2 id="6-competitors-and-differentiation">6. Competitors and Differentiation</h2>
+<div class="tw"><table><thead><tr><th>Product</th><th>What it does</th><th>How CurbCheck differs</th></tr></thead><tbody><tr><td>PayByPhone</td><td>Street parking payment</td><td>We help you plan before you go</td></tr><tr><td>SpotAngels, ParkMe</td><td>Find cheap parking, compare prices</td><td>We check legality across your <strong>whole stay</strong> and total the cost across time windows</td></tr><tr><td>EasyPark app</td><td>City-owned parking lots</td><td>We focus on street parking rules</td></tr></tbody></table></div>
+<p>We have not found a direct public competitor for the City view.</p>
+<h2 id="7-data-sources-trilemma-catalog-first">7. Data Sources (Trilemma Catalog First)</h2>
+<div class="tw"><table><thead><tr><th>Data</th><th>In Trilemma catalog?</th><th>Use</th><th>View</th></tr></thead><tbody><tr><td>Parking tickets (<code>vancouver-parking-tickets</code>)</td><td>✅</td><td>Infraction types, enforcement concentration, block heads-ups</td><td>Both</td></tr><tr><td>Property addresses (<code>vancouver-property-addresses</code>)</td><td>✅</td><td>Turn ticket "100-block + street" into coordinates</td><td>Both</td></tr><tr><td>311 parking enforcement requests (<code>vancouver-311-service-requests</code>)</td><td>✅</td><td>Request times (with timestamps and coordinates)</td><td>City</td></tr><tr><td>Parking meters (City open data <code>parking-meters</code>)</td><td>❌ Supplementary public data</td><td>Coordinates, rates, limits, and rush hours for 3,642 meters; also the base map</td><td>Both</td></tr></tbody></table></div>
+<p>Known data limitations (combining Anahid's notes and our own checks):</p>
+<ul><li>Tickets have <strong>a date but no time of day</strong>, and locations only to the 100-block.</li><li>Ticket data currently runs to the end of June 2026 (the 2026 dataset <code>parking-tickets</code> is the one the Trilemma catalog links to; 2020–2025 is a separate history dataset) and <strong>excludes VPD-issued tickets</strong>.</li><li>The 2020-onward ticket data <strong>includes water tickets</strong>, which must be filtered out.</li><li>One meter row may be <strong>one pay station covering several spaces</strong>; we call these "meters (pay stations)."</li><li>Meter data has <strong>no street field</strong>, so matching relies on coordinates.</li></ul>
+<h2 id="8-method">8. Method</h2>
+<p><strong>Shared core: time-window rules engine</strong></p>
+<ul><li>Turn text like <code>$5.00</code>, <code>2 Hr</code>, and <code>3:00pm to 6:00pm</code> into computable values.</li><li>Given an arrival time and duration, check for rush-hour or prohibition overlaps and per-window time limits, and total the cost window by window (free from 10 pm to 9 am).</li></ul>
+<p><strong>Ticket processing</strong> (following Anahid's plan)</p>
+<ul><li>Keep issued tickets only (exclude voids and warnings by Status), de-duplicate by <code>BI_ID</code>, and filter out water tickets.</li><li>Use January 2025 – June 2026 data to reduce mismatch with current rules.</li><li>Group by bylaw section and keywords: meter expired, overstayed limit, rush-hour no stopping, loading zone, fire hydrant, residential permit zone, and so on.</li></ul>
+<p><strong>Geocoding</strong></p>
+<ul><li>Group the address data by "civic number rounded down to the hundred + street" and average the coordinates to get block locations, then join to tickets. No external geocoding service needed.</li></ul>
+<p><strong>Metric principles</strong></p>
+<ul><li>Ticket counts show <strong>where enforcement happened</strong>, not parking demand or the probability of a ticket.</li><li><strong>Meter rates</strong> serve as the demand proxy: Vancouver adjusts rates based on occupancy.</li><li>Fines vs. fees are shown only as a <strong>gap</strong>, never as "not paying is cheaper." Fine amounts come from Schedule A of By-law No. 10201, with a 40% discount for payment within 14 days (current amounts to be confirmed).</li></ul>
+<h2 id="9-mvp-and-stretch-features">9. MVP and Stretch Features</h2>
+<p><strong>MVP</strong></p>
+<ul><li>Shared map with a "Driver / City" toggle.</li><li>Driver view: destination, time, duration → top three legal options with total cost.</li><li>City view: ticket concentration and infraction-type layers, 311 hour-of-day chart, two or three insights.</li><li>Data page: sources, update dates, limitations.</li></ul>
+<p><strong>Stretch (only if time allows)</strong></p>
+<ul><li>Typed questions (Anahid's idea): a language model <strong>only extracts</strong> the location, weekday, and duration; all numbers and verdicts come from the data and rules.</li><li>A chart of the gap between meter fees and fines.</li><li>Voice input (last step).</li></ul>
+<h2 id="10-out-of-scope">10. Out of Scope</h2>
+<ul><li>Real-time availability and parkade prices (no open data).</li><li>Forecasting models and language-model-written verdicts.</li><li>A native app (we build a mobile-friendly Streamlit web app).</li></ul>
+<h2 id="11-team-roles-3-people">11. Team Roles (3 People)</h2>
+<div class="tw"><table><thead><tr><th>Member</th><th>Responsibilities</th></tr></thead><tbody><tr><td>Yan-Bo</td><td>Time-window rules engine (shared core) + Driver view</td></tr><tr><td>Juwon</td><td>Streamlit scaffold and map + City view</td></tr><tr><td>Anahid</td><td>Ticket cleaning, infraction categories, block-coordinate lookup, feeding both views</td></tr></tbody></table></div>
+<h2 id="12-three-day-schedule-demo-day-tue-10-13">12. Three-Day Schedule (Demo Day: Tue 10/13)</h2>
+<div class="tw"><table><thead><tr><th></th><th>Yan-Bo: rules engine + Driver view</th><th>Juwon: map + City view</th><th>Anahid: ticket data</th><th>Done when</th></tr></thead><tbody><tr><td><strong>Day 1</strong></td><td>Parse time-window rules; write the "arrival time + duration → legal? + cost" function</td><td>Streamlit scaffold and meter map; rate layer</td><td>Clean tickets (voids, duplicates, water tickets); build the block-coordinate lookup</td><td>The map renders; cost can be computed for any meter</td></tr><tr><td><strong>Day 2</strong></td><td>Driver view: tap a destination, list the top three options</td><td>City view: ticket concentration and infraction-type layers; 311 hour-of-day chart</td><td>Infraction categories; attach tickets to the map for both views</td><td>Both views work; <strong>deploy once today</strong></td></tr><tr><td><strong>Day 3</strong></td><td>Test edge cases (crossing windows, crossing 10 pm)</td><td>Write up two or three City insights</td><td>Write data notes and limitations</td><td><strong>Feature freeze at noon</strong>, rehearse in the afternoon</td></tr></tbody></table></div>
+<p><strong>Stop-loss</strong>: if the City view isn't working by the end of Day 2, shrink it to one analysis slide. The Driver view must ship. If the team gets smaller, cut the City view's interactive features first.</p>
+<p>Ground rules:</p>
+<ul><li>Spend about 30 minutes before Day 1 locking the shared data format (columns and file names).</li><li>Each evening sync answers only three things: what I finished today, what I'll do tomorrow, and whether I'm blocked.</li><li>If anyone is stuck for more than 2 hours, raise it in the group chat.</li></ul>
+<h2 id="13-demo-script-2-minutes">13. Demo Script (2 Minutes)</h2>
+<ol><li>Open: "92% of Vancouver's meters have different daytime and evening time limits. Park here at 5 pm and you're already breaking the rules."</li><li>Driver view: a judge taps a destination and a time; the app lists three legal, low-cost options. The same spot costs just $10.50 for 3 hours from 6 pm.</li><li>Switch to City view: "With the same rules, the City sees these blocks where one infraction type stands out — a sign the signage may be unclear."</li><li>Close: one data engine — drivers know how to park, and the City knows what to fix.</li></ol>
+<h2 id="14-risks">14. Risks</h2>
+<ul><li><strong>Two views split the team's effort</strong>: managed by the stop-loss; the Driver view comes first.</li><li><strong>What rush hours actually mean</strong>: confirm whether it's no stopping, tow-away, or something else.</li><li><strong>Mapping tickets is error-prone</strong>: use the address-grouping method and spot-check a sample by hand.</li><li><strong>Tickets currently end in June 2026 and exclude VPD tickets</strong>: show the date range and limitations.</li><li><strong>Data vs. posted signs</strong>: the UI reminds users that posted signs win.</li><li><strong>Meter data is outside the Trilemma catalog</strong>: used as supplementary public data; confirm datathon rules.</li></ul>
+</main></body></html>

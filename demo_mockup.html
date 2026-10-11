@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CurbCheck — Demo Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--font:"Overpass","Highway Gothic","Arial Narrow",system-ui,sans-serif;
+--paper:#EEF0F2;--ink:#2A2D33;--muted:#5B6068;--rule:#CDD1D7;--panel:#FFFFFF;--chip:#E1E4E8;--street:#D7DBE0;--block:#F7F8F9;
+--sign:#1F4E9C;--curb:#F2C230;--ticket:#C8342B;--ok:#2E7D4F;--city:#6B4FA0;--gray:#9AA3AD;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1E2126;--ink:#E8EAED;--muted:#A4AAB3;--rule:#3A3F47;--panel:#272B31;--chip:#31363D;--street:#3A3F47;--block:#2C3036;--sign:#5B8FE0;--ok:#5FBF86;--city:#A78BDA;--gray:#6B737D}}
+:root[data-theme="dark"]{--paper:#1E2126;--ink:#E8EAED;--muted:#A4AAB3;--rule:#3A3F47;--panel:#272B31;--chip:#31363D;--street:#3A3F47;--block:#2C3036;--sign:#5B8FE0;--ok:#5FBF86;--city:#A78BDA;--gray:#6B737D}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;margin-right:auto}
+.brand .p{width:30px;height:30px;border-radius:5px;background:var(--sign);color:#fff;display:grid;place-items:center;font-size:20px;box-shadow:inset 0 -4px 0 var(--curb)}
+.toggle{display:inline-flex;border:2px solid var(--rule);border-radius:999px;padding:3px;background:var(--paper)}
+.toggle button{border:0;background:transparent;color:var(--ink);font:inherit;font-weight:800;padding:6px 16px;border-radius:999px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--sign);color:#fff}
+.toggle button[data-mode="city"][aria-pressed="true"]{background:var(--city)}
+.play{border:2px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-weight:800;padding:6px 14px;border-radius:6px;cursor:pointer}
+button:focus-visible,select:focus-visible,svg:focus-visible{outline:3px solid var(--curb);outline-offset:2px}
+.app{display:grid;grid-template-columns:340px 1fr;min-height:calc(100% - 100px)}
+aside{background:var(--panel);border-right:1px solid var(--rule);padding:16px 18px;overflow:auto}
+aside h2{font-size:15px;font-weight:800;margin:0 0 8px;color:var(--muted)}
+.field{display:grid;gap:4px;margin-bottom:12px}
+.field label{font-weight:700;font-size:14px}
+select{font:inherit;padding:8px 10px;border:2px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink)}
+.dest{font-size:14px;color:var(--muted);margin:-4px 0 14px}
+.dest b{color:var(--ink)}
+.card{border:1px solid var(--rule);border-left:6px solid var(--ok);border-radius:6px;padding:10px 12px;margin:8px 0;background:var(--paper);transition:transform .25s,opacity .25s}
+.card.bad{border-left-color:var(--ticket)}
+.card .top{display:flex;justify-content:space-between;gap:8px;font-weight:800}
+.card .rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;font-size:13px;margin-right:6px}
+.card .cost{font-size:18px}
+.card .sub{font-size:13.5px;color:var(--muted)}
+.card .why{font-size:13.5px;color:var(--ticket);font-weight:700}
+.heads{font-size:13.5px;background:var(--chip);border-radius:6px;padding:8px 10px;margin-top:10px}
+.empty{font-size:14px;color:var(--muted)}
+.bars{display:grid;gap:6px;margin:6px 0 16px}
+.bar{display:grid;grid-template-columns:130px 1fr 38px;gap:8px;align-items:center;font-size:13.5px}
+.bar i{display:block;height:12px;border-radius:3px;background:var(--city);transition:width .5s}
+.hours{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:80px;border-bottom:2px solid var(--rule)}
+.hours span{background:var(--city);border-radius:2px 2px 0 0;opacity:.85;transition:height .5s}
+.hlab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px}
+.insight{border:1px solid var(--rule);border-top:4px solid var(--city);border-radius:6px;padding:8px 10px;margin:8px 0;font-size:14px;background:var(--paper)}
+.mapwrap{position:relative;padding:14px;display:grid;place-items:center}
+svg{width:100%;max-width:820px;height:auto;background:var(--block);border-radius:10px;border:1px solid var(--rule);cursor:crosshair}
+.caption{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(560px,90%);background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:8px;font-weight:700;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center}
+.caption.show{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted);margin-top:8px;max-width:820px;width:100%}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.note{font-size:12.5px;color:var(--muted);padding:8px 18px 16px}
+.pulse{animation:pulse 1.2s ease-in-out 2}
+@keyframes pulse{50%{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:820px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--rule)}.mapwrap{order:-1}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="p" aria-hidden="true">P</span>CurbCheck</div>
+  <div class="toggle" role="group" aria-label="View">
+    <button data-mode="driver" aria-pressed="true">Driver</button>
+    <button data-mode="city" aria-pressed="false">City</button>
+  </div>
+  <button class="play" id="play">Play demo</button>
+</header>
+<div class="app">
+  <aside id="panel"></aside>
+  <section class="mapwrap">
+    <svg id="map" viewBox="0 0 600 420" role="img" aria-label="Schematic map of downtown blocks with parking meters" tabindex="0"></svg>
+    <div class="legend" id="legend"></div>
+    <div class="caption" id="cap" aria-live="polite"></div>
+  </section>
+</div>
+<p class="note">Mockup for the team. Schematic map; street layout simplified. Meter <b>081034</b> uses its real rules from City of Vancouver open data (Oct 2026). All other meters, ticket shares, and 311 counts are illustrative placeholders. Weekday only. Time limits are approximated per window.</p>
+<script>
+const VX=[60,170,280,390,500], VN=['Burrard St','Hornby St','Howe St','Granville St','Seymour St'];
+const HY=[60,160,260,360], HN=['Georgia St','Robson St','Smithe St','Nelson St'];
+const M=[
+ {id:'081034',x:390,y:110,rd:5,re:3.5,ld:2,le:4,pm:[15,18],real:true},
+ {id:'A102',x:325,y:160,rd:5,re:3.5,ld:2,le:4,pm:[15,18]},
+ {id:'A118',x:440,y:160,rd:4,re:3,ld:2,le:4,pm:null},
+ {id:'B207',x:280,y:205,rd:3,re:2,ld:3,le:4,pm:null},
+ {id:'B231',x:500,y:210,rd:4,re:3,ld:2,le:3,pm:[15,18]},
+ {id:'C044',x:225,y:160,rd:3,re:2,ld:4,le:4,pm:null},
+ {id:'C090',x:390,y:215,rd:5,re:3.5,ld:2,le:4,pm:null},
+ {id:'D311',x:280,y:110,rd:6,re:4,ld:2,le:2,pm:[15,18],am:[7,9.5]},
+ {id:'D355',x:500,y:110,rd:5,re:3,ld:1,le:4,pm:null},
+ {id:'E520',x:170,y:260,rd:2,re:1.5,ld:4,le:4,pm:null},
+ {id:'E561',x:440,y:310,rd:3,re:2,ld:3,le:4,pm:null},
+ {id:'F610',x:330,y:360,rd:2.5,re:2,ld:3,le:4,pm:[15,18]}
+];
+const HEADS={'081034':'Most tickets near here: expired meter','A102':'Most tickets near here: rush-hour no stopping','B207':'Most tickets near here: overstayed time limit'};
+const BLOCKS=[[1,0,.9],[2,0,.7],[3,0,1],[0,1,.35],[1,1,.55],[2,1,.8],[3,1,.6],[0,2,.2],[1,2,.4],[2,2,.45],[3,2,.3]];
+const INFR=[['Meter expired',41],['Overstayed limit',22],['Rush-hour no stopping',14],['Loading zone',9],['Residential permit',8],['Other',6]];
+const H311=[1,0,0,0,0,1,2,4,6,8,10,13,14,12,10,9,11,15,16,13,9,6,4,2];
+const params=new URLSearchParams(location.search);let state={mode:params.get('view')==='city'?'city':'driver',dest:{x:390,y:160,label:'Granville St & Robson St'},arr:17,dur:3};
+const $=s=>document.querySelector(s), svg=$('#map'), NS='http://www.w3.org/2000/svg';
+const fmt=h=>{const hh=Math.floor(h)%24,mm=Math.round((h-Math.floor(h))*60);const ap=hh<12?'am':'pm';const h12=(hh+11)%12+1;return h12+(mm?':'+String(mm).padStart(2,'0'):'')+' '+ap;};
+function evaluate(m,a,d){const b=a+d,reasons=[];
+ for(const r of [m.am,m.pm]) if(r&&a<r[1]&&b>r[0]) reasons.push('Rush hours '+fmt(r[0])+'–'+fmt(r[1]));
+ const W=[[0,9,0,99,'Free'],[9,18,m.rd,m.ld,'Daytime'],[18,22,m.re,m.le,'Evening'],[22,24,0,99,'Free']];
+ let cost=0;for(const [s,e,rate,lim,name] of W){const ov=Math.max(0,Math.min(b,e)-Math.max(a,s));cost+=ov*rate;if(ov>lim+1e-9)reasons.push(name+' limit is '+lim+' hr');}
+ return {legal:!reasons.length,cost,reasons};}
+const dist=(m)=>Math.round(Math.hypot(m.x-state.dest.x,m.y-state.dest.y)*2);
+function nearestStreet(x,y){const vi=VX.reduce((b,v,i)=>Math.abs(v-x)<Math.abs(VX[b]-x)?i:b,0),hi=HY.reduce((b,v,i)=>Math.abs(v-y)<Math.abs(HY[b]-y)?i:b,0);return VN[vi]+' & '+HN[hi];}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function results(){const list=M.map(m=>({m,d:dist(m),...evaluate(m,state.arr,state.dur)})).filter(r=>r.d<=250);
+ const legal=list.filter(r=>r.legal).sort((a,b)=>a.cost-b.cost||a.d-b.d).slice(0,3);
+ const nearest=list.slice().sort((a,b)=>a.d-b.d)[0];return {list,legal,nearest};}
+function drawMap(){svg.innerHTML='';
+ if(state.mode==='city'){for(const [c,r,v] of BLOCKS){el('rect',{x:VX[c]+8,y:HY[r]+8,width:VX[c+1]-VX[c]-16,height:HY[r+1]-HY[r]-16,rx:4,fill:css('--city'),'fill-opacity':(0.12+v*0.7).toFixed(2)});}}
+ VX.forEach((x,i)=>{el('line',{x1:x,y1:20,x2:x,y2:400,stroke:css('--street'),'stroke-width':14});const t=el('text',{x:x,y:14,'text-anchor':'middle','font-size':11,'font-weight':700,fill:css('--muted')});t.textContent=VN[i];});
+ HY.forEach((y,i)=>{el('line',{x1:20,y1:y,x2:580,y2:y,stroke:css('--street'),'stroke-width':14});const t=el('text',{x:586,y:y+4,'font-size':11,'font-weight':700,fill:css('--muted'),'text-anchor':'end',transform:`rotate(0)`});t.textContent='';const t2=el('text',{x:24,y:y-10,'font-size':11,'font-weight':700,fill:css('--muted')});t2.textContent=HN[i];});
+ if(state.mode==='driver'){const {list,legal}=results();const top=new Map(legal.map((r,i)=>[r.m.id,i+1]));
+  el('circle',{cx:state.dest.x,cy:state.dest.y,r:125,fill:'none',stroke:css('--sign'),'stroke-dasharray':'4 5','stroke-opacity':.5});
+  for(const m of M){const r=list.find(z=>z.m.id===m.id);const rank=top.get(m.id);const fill=!r?css('--gray'):rank?css('--ok'):r.legal?css('--gray'):css('--ticket');
+   const c=el('circle',{cx:m.x,cy:m.y,r:rank?11:7,fill,stroke:css('--panel'),'stroke-width':2});c.style.transition='r .3s';
+   if(rank){const t=el('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-size':12,'font-weight':900,fill:'#fff'});t.textContent=rank;}
+   if(m.real){const t=el('text',{x:m.x+14,y:m.y-10,'font-size':11,'font-weight':800,fill:css('--ink')});t.textContent='081034';}}
+  const g=el('g',{transform:`translate(${state.dest.x},${state.dest.y})`});el('path',{d:'M0 0 L-9 -18 A11 11 0 1 1 9 -18 Z',fill:css('--curb'),stroke:'#2A2D33','stroke-width':1.5},g);el('circle',{cx:0,cy:-24,r:4,fill:'#2A2D33'},g);}
+ else{for(const m of M) el('circle',{cx:m.x,cy:m.y,r:4,fill:css('--muted'),'fill-opacity':.6});}
+ $('#legend').innerHTML=state.mode==='driver'
+  ?`<span><i style="background:${css('--ok')}"></i>Top 3 legal for your stay</span><span><i style="background:${css('--gray')}"></i>Legal, costs more</span><span><i style="background:${css('--ticket')}"></i>Not legal for your stay</span><span><i style="background:${css('--curb')}"></i>Destination (tap map to move)</span>`
+  :`<span><i style="background:${css('--city')};border-radius:2px"></i>Stronger color = more tickets (illustrative)</span><span><i style="background:${css('--muted')}"></i>Meters</span>`;}
+function drawPanel(){const p=$('#panel');
+ if(state.mode==='driver'){const {legal,nearest}=results();const opts=(a,b,step,f)=>{let s='';for(let v=a;v<=b;v+=step)s+=`<option value="${v}">${f(v)}</option>`;return s;};
+  p.innerHTML=`<h2>Plan your stay · weekday</h2>
+  <div class="field"><label for="arr">Arrive at</label><select id="arr">${opts(8,20,1,fmt)}</select></div>
+  <div class="field"><label for="dur">Stay for</label><select id="dur">${opts(1,4,1,v=>v+(v>1?' hours':' hour'))}</select></div>
+  <p class="dest">Destination: <b>${state.dest.label}</b></p>
+  <h2>Best options nearby</h2>
+  ${legal.length?legal.map((r,i)=>`<div class="card" data-id="${r.m.id}"><div class="top"><span><span class="rank">${i+1}</span>Meter ${r.m.id}</span><span class="cost">$${r.cost.toFixed(2)}</span></div><div class="sub">${r.d} m · about ${Math.max(1,Math.round(r.d/80))} min walk · legal ${fmt(state.arr)}–${fmt(state.arr+state.dur)}</div></div>`).join(''):'<p class="empty">No meter nearby is legal for this whole stay. Try a later time or a shorter stay.</p>'}
+  ${nearest?(nearest.legal?`<div class="card" id="nearbad"><div class="top"><span>Closest meter ${nearest.m.id}</span><span class="cost">$${nearest.cost.toFixed(2)}</span></div><div class="sub">✓ Legal for your stay · ${nearest.d} m</div></div>`:`<div class="card bad" id="nearbad"><div class="top"><span>Closest meter ${nearest.m.id}</span><span>✕</span></div><div class="why">${nearest.reasons.join(' · ')}</div></div>`):''}
+  ${legal[0]&&HEADS[legal[0].m.id]?`<div class="heads">Heads-up for option 1: ${HEADS[legal[0].m.id]}.</div>`:''}`;
+  $('#arr').value=state.arr;$('#dur').value=state.dur;
+  $('#arr').onchange=e=>{stopDemo();state.arr=+e.target.value;render();};$('#dur').onchange=e=>{stopDemo();state.dur=+e.target.value;render();};}
+ else{p.innerHTML=`<h2>Ticket mix downtown (illustrative)</h2><div class="bars">${INFR.map(([n,v])=>`<div class="bar"><span>${n}</span><i style="width:${v*2.2}%"></i><span>${v}%</span></div>`).join('')}</div>
+  <h2>311 parking requests by hour (illustrative)</h2><div class="hours">${H311.map(v=>`<span style="height:${v/16*100}%"></span>`).join('')}</div><div class="hlab"><span>12 am</span><span>6 am</span><span>12 pm</span><span>6 pm</span><span>11 pm</span></div>
+  <h2>Insights</h2><div class="insight" id="ins1">Rush-hour violations cluster on Georgia St blocks — candidates for clearer signage.</div><div class="insight">Requests peak 5–7 pm, when daytime limits end and evening rules begin.</div>`;}}
+function render(){drawMap();drawPanel();document.querySelectorAll('.toggle button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===state.mode));}
+svg.addEventListener('click',e=>{if(state.mode!=='driver')return;stopDemo();const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());state.dest={x:Math.max(30,Math.min(570,p.x)),y:Math.max(30,Math.min(390,p.y)),label:'Near '+nearestStreet(p.x,p.y)};render();});
+document.querySelectorAll('.toggle button').forEach(b=>b.onclick=()=>{stopDemo();state.mode=b.dataset.mode;render();});
+let timers=[];function cap(t){const c=$('#cap');c.textContent=t;c.classList.toggle('show',!!t);}
+function stopDemo(){timers.forEach(clearTimeout);timers=[];cap('');}
+function at(ms,fn){timers.push(setTimeout(fn,ms));}
+$('#play').onclick=()=>{stopDemo();state={mode:'driver',dest:{x:390,y:160,label:'Granville St & Robson St'},arr:17,dur:3};render();
+ at(200,()=>cap('A driver needs 3 hours near Granville & Robson, arriving at 5 pm.'));
+ at(3200,()=>{cap('The closest meter is off-limits: rush hours run until 6 pm.');const n=$('#nearbad');n&&n.classList.add('pulse');});
+ at(6600,()=>{cap('CurbCheck lists the cheapest meters that are legal for the whole stay.');document.querySelectorAll('.card:not(.bad)').forEach(c=>c.classList.add('pulse'));});
+ at(10000,()=>{state.arr=18;render();cap('Arrive at 6 pm instead: the closest meter, 081034, is now legal — $10.50 for 3 hours.');const n=$('#nearbad');n&&n.classList.add('pulse');});
+ at(14000,()=>{state.mode='city';render();cap('Same data, City view: where tickets concentrate and when requests peak.');});
+ at(17800,()=>{const i=$('#ins1');i&&i.classList.add('pulse');cap('Insight: rush-hour violations cluster on a few blocks — a signage question for the City.');});
+ at(22000,()=>cap(''));};
+render();
+</script>
+</body>
+</html>
