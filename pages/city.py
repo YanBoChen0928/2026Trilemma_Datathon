@@ -65,6 +65,19 @@ def rate_style(rate):
     return RATE_BINS[-1][1]
 
 
+@st.cache_data
+def rate_geojson(rate_field, rate_label):
+    features = [
+        {"type": "Feature",
+         "geometry": {"type": "Point", "coordinates": [round(m.lon, 6), round(m.lat, 6)]},
+         "properties": {"colour": rate_style(getattr(m, rate_field)),
+                        "tip": f"<b>Meter {m.meter_id}</b><br>{rate_label}: "
+                               f"${getattr(m, rate_field):.2f}/hr"}}
+        for m in meters().dropna(subset=[rate_field]).itertuples()
+    ]
+    return {"type": "FeatureCollection", "features": features}
+
+
 def tooltip(html):
     return folium.Tooltip(html, style=TOOLTIP_STYLE)
 
@@ -122,18 +135,19 @@ highlight = insight_by_id.get(state.city_insight)
 # --- Map --------------------------------------------------------------------------
 
 with right:
+    # Canvas rendering keeps ~4,000 markers responsive in the browser.
     fmap = folium.Map(location=DOWNTOWN, zoom_start=14, tiles="OpenStreetMap",
-                      control_scale=True)
+                      control_scale=True, prefer_canvas=True)
 
-    rate_layer = folium.FeatureGroup(name=f"Meter rate — {rate_label}")
-    for m in meters().dropna(subset=[rate_field]).itertuples():
-        rate = getattr(m, rate_field)
-        folium.CircleMarker(
-            (m.lat, m.lon), radius=3, color=rate_style(rate), fill=True,
-            fill_opacity=0.9, weight=0,
-            tooltip=tooltip(f"<b>Meter {m.meter_id}</b><br>{rate_label}: ${rate:.2f}/hr"),
-        ).add_to(rate_layer)
-    rate_layer.add_to(fmap)
+    # One GeoJSON layer instead of one marker per meter keeps the page small.
+    folium.GeoJson(
+        rate_geojson(rate_field, rate_label),
+        name=f"Meter rate — {rate_label}",
+        marker=folium.CircleMarker(radius=3, fill=True, fill_opacity=0.9, weight=0),
+        style_function=lambda f: {"color": f["properties"]["colour"],
+                                  "fillColor": f["properties"]["colour"]},
+        tooltip=folium.GeoJsonTooltip(["tip"], labels=False, style=TOOLTIP_STYLE),
+    ).add_to(fmap)
 
     ticket_layer = folium.FeatureGroup(
         name="Tickets by 100-block" + (f" — {', '.join(picked)}" if picked else ""))
@@ -172,15 +186,15 @@ with right:
     folium.LayerControl(collapsed=True).add_to(fmap)
 
     out = st_folium(fmap, key="city_map", height=520, use_container_width=True,
-                    returned_objects=["last_object_clicked"])
-    click = (out or {}).get("last_object_clicked")
-    if click and click != state.city_last_click:
+                    returned_objects=["last_object_clicked", "last_object_clicked_tooltip"])
+    # Identify the clicked circle by its tooltip, which starts with the block key. The
+    # clicked position is not reliable on a canvas map, and some blocks share a coordinate.
+    click = ((out or {}).get("last_object_clicked_tooltip"), (out or {}).get("last_object_clicked"))
+    if click[0] and click != state.city_last_click:
         state.city_last_click = click
-        hit = shown_blocks[(shown_blocks.lat - click["lat"]).abs().lt(1e-6)
-                           & (shown_blocks.lon - click["lng"]).abs().lt(1e-6)]
-        if len(hit):
-            # Blocks can share an estimated coordinate; the last one drawn is on top.
-            state.city_block = hit.iloc[-1].block_key
+        hit = [k for k in shown_blocks.block_key if click[0].startswith(k)]
+        if hit:
+            state.city_block = max(hit, key=len)
             st.rerun()
 
     st.caption(" · ".join([dot(c, l.replace("$", r"\$")) for _, c, l in RATE_BINS]),
@@ -217,7 +231,7 @@ with left:
         breakdown = pd.DataFrame({"Category": by_cat.index, "Tickets": by_cat.values,
                                   "Share": (by_cat / total).values})
         st.dataframe(
-            breakdown, hide_index=True, use_container_width=True,
+            breakdown, hide_index=True, width="stretch",
             column_config={"Share": st.column_config.ProgressColumn(
                 "Share", format="percent", min_value=0, max_value=1)},
         )
