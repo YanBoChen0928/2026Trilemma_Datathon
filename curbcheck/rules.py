@@ -113,24 +113,36 @@ class EvaluationResult:
 
 # --- Evaluation ---------------------------------------------------------------
 
-def evaluate_meter(meter: MeterRule, arrival_datetime: datetime, duration_minutes: int,
-                   *, same_day_only: bool | None = None) -> EvaluationResult:
-    """Evaluate one meter for a stay (handoff §7.2)."""
+def stay_scope_reason(arrival_datetime: datetime, duration_minutes: int,
+                      *, same_day_only: bool | None = None) -> str | None:
+    """Return why a stay is outside the supported scope, or None (handoff §7.2 steps 1-2)."""
     if same_day_only is None:
         same_day_only = SAME_DAY_WINDOW_ONLY
-
-    # Steps 1-2: validate and check the supported scope.
-    if not isinstance(duration_minutes, (int, float)) or duration_minutes <= 0:
-        return _unsupported("Duration must be a positive number of minutes.")
+    if (isinstance(duration_minutes, bool) or not isinstance(duration_minutes, (int, float))
+            or duration_minutes <= 0):
+        return "Duration must be a positive number of minutes."
     start = arrival_datetime
     end = start + timedelta(minutes=duration_minutes)
     last_day = (end - timedelta(microseconds=1)).date()
     if duration_minutes > MAX_STAY_MINUTES or (last_day - start.date()).days > 1:
-        return _unsupported(TOO_LONG_REASON)
+        return TOO_LONG_REASON
     if same_day_only:
         d = start.date()
         if last_day != d or start < _at(d, DAY_START) or end > _at(d, METER_END):
-            return _unsupported(SCOPE_REASON)
+            return SCOPE_REASON
+    return None
+
+
+def evaluate_meter(meter: MeterRule, arrival_datetime: datetime, duration_minutes: int,
+                   *, same_day_only: bool | None = None) -> EvaluationResult:
+    """Evaluate one meter for a stay (handoff §7.2)."""
+    # Steps 1-2: validate and check the supported scope.
+    scope = stay_scope_reason(arrival_datetime, duration_minutes, same_day_only=same_day_only)
+    if scope:
+        return _unsupported(scope)
+    start = arrival_datetime
+    end = start + timedelta(minutes=duration_minutes)
+    last_day = (end - timedelta(microseconds=1)).date()
 
     # Step 4: records that preprocessing could not evaluate safely.
     if not meter.supported:
