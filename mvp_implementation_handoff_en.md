@@ -285,6 +285,9 @@ A stay within a single window is evaluated normally, since A and B give the same
 - Recommendation cards show meter ID, estimated cost, approximate distance, applicable rates, and important warnings.
 - If no supported legal option is found, explain whether the cause was no nearby records, legal conflicts, or unsupported data.
 - Always display: `Posted signs take precedence.`
+- Coverage: recommendations work for all City of Vancouver meters (not other Metro Vancouver cities). The map opens centered on Downtown, and the demo runs Downtown.
+- Outside Downtown, the stretch block heads-up is simply omitted (no ticket data there); do not show an error.
+- The Driver and City pages keep independent map states. Do not sync map position between pages in the MVP.
 
 ## 9. City Data Contract
 
@@ -324,8 +327,10 @@ Do not hide unmatched records. They may be excluded from the map, but their coun
 
 ### 10.1 Core Layers
 
-1. **Meter rate:** selectable daytime or evening rates from `meters_clean.csv`.
-2. **Ticket concentration:** proportional circles at approximate 100-block coordinates.
+1. **Meter rate:** selectable daytime or evening rates from `meters_clean.csv`; may cover the whole City of Vancouver.
+2. **Ticket concentration:** proportional circles at approximate 100-block coordinates; Downtown only.
+
+The City page always opens centered on Downtown. A banner at the top states: "Ticket analysis covers Downtown Vancouver, January 2025 – June 2026." If the user pans outside Downtown, no ticket circles appear; the banner explains why. Do not add a Downtown boundary layer in the MVP (it would require boundary data outside the data contract).
 
 Do not describe point markers as colored block polygons. Block polygons are not part of the MVP data contract.
 
@@ -415,7 +420,7 @@ The City pipeline must verify:
 
 ### Step 1 — Runnable Shared App Shell
 
-Suggested owner: Juwon.
+Owner: Yan-Bo (with Anahid if she joins; confirm with the team).
 
 - Create the Streamlit entry point and Driver/City pages.
 - Add dependency and run instructions.
@@ -443,7 +448,7 @@ Suggested owner: Yan-Bo.
 
 ### Step 4 — Driver Page
 
-Suggested owner: Yan-Bo, integrated with Juwon's app shell.
+Suggested owner: Yan-Bo, integrated into the shared app shell.
 
 - Add destination and stay inputs.
 - Evaluate, rank, and display results.
