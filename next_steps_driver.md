@@ -10,7 +10,7 @@
 - **現在停在：Step 2 停車表前處理**（預計今天 10am–1pm）。
 - Step 0：大部分完成，還在等組員回覆兩項（見下方）。
 - Step 1：完成，已推到 `YB` 分支；PR `YB → main` 待合併。
-- **開新對話時**：告訴 Claude WD 是 `/Users/yanbochen/IdeaProjects/202610_Datathon_Trilemma`，並請它先讀這三份：`next_steps_driver.md`、`mvp_implementation_handoff_en.md`、`CONTRIBUTING.md`。
+- **開新對話時**：告訴 Claude WD 是 `/Users/yanbochen/IdeaProjects/202610_Datathon_Trilemma`，並請它先讀這四份：`next_steps_driver.md`、`mvp_implementation_handoff_en.md`、`CONTRIBUTING.md`、`ai_collaboration_en.md`。
 
 ## Git 流程（每一步都照這個循環）
 
@@ -83,7 +83,8 @@ streamlit run app.py
 ## Step 2：停車表前處理（handoff §6）
 
 - [ ] 從市府開放資料下載 `parking-meters`，存成有日期的快照。
-- [ ] 保留原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）。
+- [ ] 保留全部 34 個原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）；使用 `object_id` 作為唯一鍵，`meter_id` 只用於顯示。
+- [ ] 禁停時段完整保留 24 小時，不依目前 UI 範圍裁切；解析 `Noon`、`Midnight`、`Anytime`，並輸出每組禁停的 start/end minutes、`crosses_midnight` 與 `all_day`。
 - [ ] 依 §6.2 標記 `supported` 與 `unsupported_reason`：
   - 非 In Service、非 `Any Vehicle`、有固定費率
   - `time_limit_override` 或 `prohibition_override` 為 Yes
@@ -91,15 +92,17 @@ streamlit run app.py
   - 尖峰或禁停欄位只填了一部分，或有值但無法解析（整組空白＝沒有該項限制，需先核對原始資料）
   - 座標缺失或無效
 - [ ] 時限欄位：`No Time Limit` 寫成 `-1`，空值代表資料缺失。
-- [ ] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）。
+- [ ] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）；報告包含資料集 ID、來源 URL、下載時間、原始與 supported 筆數、各 unsupported 原因、解析失敗欄位與重複 `meter_id` 數量。
 
-**檢查點**：可評估筆數應接近全市 2,761、市中心 637（§6.3）。差很多就先查原因。
+**檢查點**：2026-10-11 快照的可評估筆數應為全市 2,760、市中心 636（§6.3）。未來快照可有差異，但必須由前處理報告解釋；差很多就先查原因。
 
 ## Step 3：規則引擎與測試（handoff §7、§12）
 
 - [ ] 寫純函式 `evaluate_meter(meter, arrival_datetime, duration_minutes)`，不依賴 Streamlit。
-- [ ] 依 §7.2 的順序實作：晚上 10 點後不支援 → 早於 9 點不支援 → 停用資料 → 平日 / 週末時限 → 尖峰重疊（含 9:00–9:30）→ 兩組禁停 → 6 點切分 → 三種結果判斷（§7.4）→ 按分鐘比例估算費用。
-- [ ] 先通過 §12 的 8 個測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
+- [ ] 依 §7.2 的時間軸流程實作：超過 24 小時或跨兩次午夜不支援 → 在 9:00、18:00、22:00、午夜分段 → 停用資料 → 依每段日期選平日 / 週末時限 → 尖峰重疊（每天套用）→ 兩組禁停（依實際日期）→ 停車表時限（9 點重新計時、6 點用三態規則 §7.4）→ 三小時規則 → 合併結果（`False` > `None` > `True`）→ 估算費用（夜間 $0）。
+- [ ] 支援範圍做成設定值：Day 2 部署先限制在同日 9:00 am–10:00 pm。
+- [ ] 先通過 §12 的 8 個基本測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
+- [ ] 時間軸測試（§12）通過後，解除 Day 2 的範圍限制。
 
 **檢查點**：不開 Streamlit，單獨跑 `pytest` 全部通過。
 
