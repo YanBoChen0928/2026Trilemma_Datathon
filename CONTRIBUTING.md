@@ -8,7 +8,7 @@ This file is for the three of us. The `README.md` is for judges and first-time v
 
 1. **Confirm two team decisions**
    - Deployment platform (recommended: Streamlit Community Cloud; see Section 7).
-   - Integration and deployment owner (the handoff suggests Juwon).
+   - Integration and deployment owner: Yan-Bo (with Anahid if she joins).
 2. **Freeze shared contracts**
    - `meters_clean.csv` columns: handoff §6.1.
    - `tickets_block_agg.csv` columns: handoff §9.1.

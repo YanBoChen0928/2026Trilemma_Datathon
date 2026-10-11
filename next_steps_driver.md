@@ -8,14 +8,14 @@
 ## Step 0：開工前確認（約 30 分鐘）
 
 - [ ] 依 `CONTRIBUTING.md` 的 Step 0 完成團隊約定：部署平台、整合與部署負責人、共用資料格式、Python 版本與 `requirements.txt`、demo 情境。
-- [ ] 確認 Streamlit app 骨架由誰建立（handoff 建議 Juwon）。如果還沒人負責，你先建一個最小骨架，之後再合併。
+- [ ] 整合與部署由你負責（Anahid 可能一起）：你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
 
 ## Step 1：建立專案結構
 
 建議的資料夾配置：
 
 ```
-app.py                  # Streamlit 入口（若由 Juwon 建立則沿用）
+app.py                  # Streamlit 入口（你建立並維護）
 pages/driver.py         # 駕駛頁面（你）
 pages/city.py           # 市府頁面（Anahid、Juwon）
 curbcheck/rules.py      # 規則引擎（純函式）
