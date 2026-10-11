@@ -3,6 +3,7 @@
 Find street parking that is legal for the whole stay and estimate its cost.
 Spec: mvp_implementation_handoff_en.md, Sections 6–8.
 """
+import math
 import re
 from collections import Counter
 from datetime import date, datetime, time, timedelta
@@ -11,7 +12,7 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-from curbcheck.ranking import SEARCH_RADIUS_M, find_parking, load_meters
+from curbcheck.ranking import SEARCH_RADIUS_M, distances_m, find_parking, load_meters
 from curbcheck.rules import NO_TIME_LIMIT, SAME_DAY_WINDOW_ONLY
 
 st.set_page_config(page_title="CurbCheck — Driver View", page_icon="🚗", layout="wide")
@@ -113,6 +114,15 @@ def clock(dt):
     return dt.strftime("%I:%M %p").lstrip("0").replace("AM", "am").replace("PM", "pm")
 
 
+def nearest_supported_meter(lat, lon):
+    """The closest meter CurbCheck can evaluate, anywhere in the city."""
+    df = meters()
+    df = df[df["supported"]]
+    d = distances_m(lat, lon, df["lat"], df["lon"])
+    i = int(d.argmin())
+    return df.iloc[i], float(d[i])
+
+
 def tooltip(title, label, reason=""):
     html = f"<b>{title}</b><br>{label}" + (f"<br><i>{reason}</i>" if reason else "")
     return folium.Tooltip(html, style=TOOLTIP_STYLE)
@@ -179,6 +189,8 @@ with left:
 result = find_parking(meters(), *state.dest, arrival, duration) if state.dest else None
 evaluated = bool(result and not result.scope_reason and result.candidates)
 rec_ids = {c.meter.object_id for c in result.recommendations} if evaluated else set()
+empty = bool(result and not result.scope_reason and not result.candidates)
+pointer = nearest_supported_meter(*state.dest) if empty else None
 
 # --- Map --------------------------------------------------------------------------
 
@@ -222,6 +234,29 @@ with right:
                     tooltip=tooltip(f"Meter {c.meter.meter_id}", label, reason),
                 ).add_to(layer)
 
+    if pointer:
+        row, dist = pointer
+        target = (float(row["lat"]), float(row["lon"]))
+        dy = target[0] - state.dest[0]
+        dx = (target[1] - state.dest[1]) * math.cos(math.radians(state.dest[0]))
+        angle = -math.degrees(math.atan2(dy, dx))  # CSS rotation; 0 = pointing east
+        blue = "#0969da"
+        folium.PolyLine([state.dest, target], color=blue, weight=3,
+                        dash_array="8 8").add_to(layer)
+        folium.Marker(target, icon=folium.DivIcon(
+            icon_size=(22, 22), icon_anchor=(11, 11),
+            html=(f"<div style='transform:rotate({angle:.0f}deg);color:{blue};"
+                  f"font-size:22px;line-height:22px'>➤</div>")),
+            tooltip=tooltip(f"Nearest meter · {row['meter_id']}",
+                            f"About {dist:.0f} m from your destination")).add_to(layer)
+        mid = ((state.dest[0] + target[0]) / 2, (state.dest[1] + target[1]) / 2)
+        folium.Marker(mid, icon=folium.DivIcon(
+            icon_size=(180, 24), icon_anchor=(90, 12),
+            html=(f"<div style='background:white;border:1px solid {blue};color:{blue};"
+                  f"border-radius:12px;padding:2px 8px;font-size:13px;font-weight:600;"
+                  f"white-space:nowrap;box-shadow:0 0 3px #0004;text-align:center'>"
+                  f"Nearest meter ≈ {dist:.0f} m</div>"))).add_to(layer)
+
     st_folium(fmap, key="driver_map", height=520, use_container_width=True,
               feature_group_to_add=layer, center=state.dest or DOWNTOWN,
               returned_objects=["last_clicked"], on_change=handle_map_click)
@@ -251,8 +286,13 @@ if not state.dest:
 elif result.scope_reason:
     st.warning(result.scope_reason)
 elif not result.candidates:
-    st.warning(f"No meter records were found within {SEARCH_RADIUS_M} m of this destination. "
-               "Try moving the destination pin.")
+    st.warning(f"No metered parking was found within {SEARCH_RADIUS_M} m. Street parking here "
+               "may have no meter fee, but posted time limits, permit zones, and other rules "
+               "still apply. CurbCheck does not evaluate unmetered parking.")
+    if pointer:
+        st.markdown(f"The nearest meter CurbCheck can evaluate is about **{pointer[1]:.0f} m** "
+                    "away. Follow the dashed arrow on the map and move the destination pin "
+                    "closer to see options there.")
 else:
     recs = result.recommendations
 
