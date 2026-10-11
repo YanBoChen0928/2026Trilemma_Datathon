@@ -7,9 +7,10 @@
 
 ## 目前進度（更新於 2026-10-11）
 
-- **現在停在：Step 2 停車表前處理**（預計今天 10am–1pm）。
+- **現在停在：Step 5 駕駛頁面收尾**：跑完手動測試清單、挑選正式 demo 地點；接著 Step 6 與 City View 整合。
 - Step 0：大部分完成，還在等組員回覆兩項（見下方）。
-- Step 1：完成，已推到 `YB` 分支；PR `YB → main` 待合併。
+- Step 1–4：完成。前處理檢查點 2,760／636；規則引擎與排序共 56 個測試通過；已解除 9:00 am–10:00 pm 限制。
+- Step 5：頁面初版完成（地圖、輸入、推薦卡片、說明）；`Load demo example` 目前用暫定地點。
 - **開新對話時**：告訴 Claude WD 是 `/Users/yanbochen/IdeaProjects/202610_Datathon_Trilemma`，並請它先讀這四份：`next_steps_driver.md`、`mvp_implementation_handoff_en.md`、`CONTRIBUTING.md`、`ai_collaboration_en.md`。
 
 ## Git 流程（每一步都照這個循環）
@@ -82,46 +83,60 @@ streamlit run app.py
 
 ## Step 2：停車表前處理（handoff §6）
 
-- [ ] 從市府開放資料下載 `parking-meters`，存成有日期的快照。
-- [ ] 保留全部 34 個原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）；使用 `object_id` 作為唯一鍵，`meter_id` 只用於顯示。
-- [ ] 禁停時段完整保留 24 小時，不依目前 UI 範圍裁切；解析 `Noon`、`Midnight`、`Anytime`，並輸出每組禁停的 start/end minutes、`crosses_midnight` 與 `all_day`。
-- [ ] 依 §6.2 標記 `supported` 與 `unsupported_reason`：
+- [x] 從市府開放資料下載 `parking-meters`，存成有日期的快照。
+- [x] 保留全部 34 個原始欄位，另外產生解析後的欄位（費率、分鐘制時限、尖峰起訖、兩組禁停）；使用 `object_id` 作為唯一鍵，`meter_id` 只用於顯示。
+- [x] 禁停時段完整保留 24 小時，不依目前 UI 範圍裁切；解析 `Noon`、`Midnight`、`Anytime`，並輸出每組禁停的 start/end minutes、`crosses_midnight` 與 `all_day`。
+- [x] 依 §6.2 標記 `supported` 與 `unsupported_reason`：
   - 非 In Service、非 `Any Vehicle`、有固定費率
   - `time_limit_override` 或 `prohibition_override` 為 Yes
   - 必要的費率或時限（平日與週末）為空值、無法解析
   - 尖峰或禁停欄位只填了一部分，或有值但無法解析（整組空白＝沒有該項限制，需先核對原始資料）
   - 座標缺失或無效
-- [ ] 時限欄位：`No Time Limit` 寫成 `-1`，空值代表資料缺失。
-- [ ] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）；報告包含資料集 ID、來源 URL、下載時間、原始與 supported 筆數、各 unsupported 原因、解析失敗欄位與重複 `meter_id` 數量。
+- [x] 時限欄位：`No Time Limit` 寫成 `-1`，空值代表資料缺失。
+- [x] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）；報告包含資料集 ID、來源 URL、下載時間、原始與 supported 筆數、各 unsupported 原因、解析失敗欄位與重複 `meter_id` 數量。
 
 **檢查點**：2026-10-11 快照的可評估筆數應為全市 2,760、市中心 636（§6.3）。未來快照可有差異，但必須由前處理報告解釋；差很多就先查原因。
 
 ## Step 3：規則引擎與測試（handoff §7、§12）
 
-- [ ] 寫純函式 `evaluate_meter(meter, arrival_datetime, duration_minutes)`，不依賴 Streamlit。
-- [ ] 依 §7.2 的時間軸流程實作：超過 24 小時或跨兩次午夜不支援 → 在 9:00、18:00、22:00、午夜分段 → 停用資料 → 依每段日期選平日 / 週末時限 → 尖峰重疊（每天套用）→ 兩組禁停（依實際日期）→ 停車表時限（9 點重新計時、6 點用三態規則 §7.4）→ 三小時規則 → 合併結果（`False` > `None` > `True`）→ 估算費用（夜間 $0）。
-- [ ] 支援範圍做成設定值：Day 2 部署先限制在同日 9:00 am–10:00 pm。
-- [ ] 先通過 §12 的 8 個基本測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
-- [ ] 時間軸測試（§12）通過後，解除 Day 2 的範圍限制。
+- [x] 寫純函式 `evaluate_meter(meter, arrival_datetime, duration_minutes)`，不依賴 Streamlit。
+- [x] 依 §7.2 的時間軸流程實作：超過 24 小時或跨兩次午夜不支援 → 在 9:00、18:00、22:00、午夜分段 → 停用資料 → 依每段日期選平日 / 週末時限 → 尖峰重疊（每天套用）→ 兩組禁停（依實際日期）→ 停車表時限（9 點重新計時、6 點用三態規則 §7.4）→ 三小時規則 → 合併結果（`False` > `None` > `True`）→ 估算費用（夜間 $0）。
+- [x] 支援範圍做成設定值：Day 2 部署先限制在同日 9:00 am–10:00 pm。
+- [x] 先通過 §12 的 8 個基本測試，其中跨 6 點用一個 parameterized test 涵蓋三個案例。
+- [x] 時間軸測試（§12）通過後，解除 Day 2 的範圍限制（`SAME_DAY_WINDOW_ONLY = False`；部署前如需保守可改回 `True`）。
 
 **檢查點**：不開 Streamlit，單獨跑 `pytest` 全部通過。
 
 ## Step 4：排序（handoff §7.3）
 
-- [ ] 用直線距離找出 250 公尺內的停車表。
-- [ ] 只推薦 `supported == True` 且 `legal == True` 的停車表（`legal` 為 `False` 或 `None` 都不推薦），依估算費用、再依距離排序，取前三。
-- [ ] 另外評估「最近的停車表」，以便說明它為什麼不能停（包含 unsupported 或 `legal == None` 的情況）。
+- [x] 用直線距離找出 250 公尺內的停車表。
+- [x] 只推薦 `supported == True` 且 `legal == True` 的停車表（`legal` 為 `False` 或 `None` 都不推薦），依估算費用、再依距離排序，取前三。
+- [x] 另外評估「最近的停車表」，以便說明它為什麼不能停（包含 unsupported 或 `legal == None` 的情況）。
 
 ## Step 5：駕駛頁面（handoff §8）
 
-- [ ] 真實地圖（folium + OpenStreetMap），點選設定目的地，顯示 OSM 來源標註。
-- [ ] 輸入：日期、抵達時間、停留時數；旁邊顯示目前支援的範圍。
-- [ ] 推薦卡片：停車表 ID、估算費用、約略距離、費率、警告。
-- [ ] 無結果、不支援、資料錯誤時的說明。
-- [ ] 固定顯示：`Posted signs take precedence.`
-- [ ] 加上 `Load demo example` 按鈕。
+- [x] 真實地圖（folium + OpenStreetMap），點選設定目的地，顯示 OSM 來源標註。
+- [x] 輸入：日期、抵達時間、停留時數；旁邊顯示目前支援的範圍。
+- [x] 推薦卡片：停車表 ID、估算費用、約略距離、費率、警告。
+- [x] 無結果、不支援、資料錯誤時的說明。
+- [x] 固定顯示：`Posted signs take precedence.`
+- [x] 加上 `Load demo example` 按鈕。
 
 **檢查點**：本機用 demo 情境完整操作一次。
+
+手動測試清單（`streamlit run app.py` → Driver View）：
+
+1. 按 `Load demo example`：自動填入日期、時間、時數，地圖移到 demo 地點，出現三張推薦卡片和最近停車表的說明。
+2. 點地圖另一個地方：目的地和 250 m 範圍圈跟著移動，結果更新（自動測試測不到，必測）。
+3. 地圖上的 1、2、3 和推薦卡片的編號一致；滑鼠移到圓點上會顯示停車表 ID 和狀態。
+4. 時數改成 4 小時（6 pm–10 pm）：仍在範圍內，結果會改變。
+5. 時數改成 5 小時：出現超出支援範圍的提示。
+6. 抵達時間改成上午 8 點：出現超出支援範圍的提示。
+7. 下午 2 點、停 4 小時：可能出現黃色（不確定規則）。
+8. 「Advanced」輸入經緯度後按 `Use these coordinates`：目的地移到該處。
+9. 目的地點在沒有停車表的地方：出現「No meter records were found within 250 m」。
+10. 展開「All meter records within 250 m」：表格的狀態、原因和地圖顏色一致。
+11. 頁面上方的 `Home` 可以回到首頁，並切換到 City View。
 
 ## Step 6：整合與部署（依 `CONTRIBUTING.md` §7）
 
