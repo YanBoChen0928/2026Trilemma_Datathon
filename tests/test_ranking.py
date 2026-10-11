@@ -50,6 +50,13 @@ def test_closest_record_is_reported_even_if_rejected():
     assert r.closest.result.reasons == ["Not in service."]
 
 
+def test_closest_legal_option_ignores_cost():
+    r = search(row("cheap", 200, rate_evening=1.0), row("near", 40, rate_evening=3.0),
+               row("off", 20, supported=False))
+    assert r.recommendations[0].meter.object_id == "cheap"
+    assert r.closest_legal.meter.object_id == "near"
+
+
 def test_out_of_scope_stay():
     r = search(row("ok", 90), minutes=5 * 60, same_day_only=True)  # past the Day 2 window
     assert r.scope_reason is not None

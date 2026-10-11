@@ -16,8 +16,8 @@ from curbcheck.rules import NO_TIME_LIMIT, SAME_DAY_WINDOW_ONLY
 st.set_page_config(page_title="CurbCheck — Driver View", page_icon="🚗", layout="wide")
 
 DOWNTOWN = (49.2820, -123.1180)
-DEMO = {  # provisional demo values (next_steps_driver.md, Step 0)
-    "dest": (49.2827, -123.1207),
+DEMO = {  # 400 W Hastings St, Tuesday 6:00 pm, 2 hours (README, "Demo scenario")
+    "dest": (49.28370197906036, -123.11137913860121),
     "date": date(2026, 10, 13),
     "time": time(18, 0),
     "hours": 2.0,
@@ -31,6 +31,7 @@ STATUS_STYLE = {  # status -> (marker colour, label)
     "uncertain": ("#bf8700", "Uncertain rule — not recommended"),
     "unsupported": ("#8c959f", "Data not supported"),
 }
+CLOSEST_LEGAL_LABEL = "★ Closest legal option"
 
 
 @st.cache_data
@@ -132,7 +133,21 @@ with right:
         for c in result.candidates:
             status = status_of(c, rec_ids)
             colour, label = STATUS_STYLE[status]
-            if status == "recommended":
+            if status == "legal" and c is result.closest_legal:
+                folium.Marker(
+                    (c.lat, c.lon),
+                    tooltip=tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
+                                    f"Estimated ${c.result.estimated_cost:.2f}"),
+                    icon=folium.DivIcon(
+                        icon_size=(26, 26), icon_anchor=(13, 13),
+                        html=(f"<div style='width:26px;height:26px;border-radius:50%;"
+                              f"background:white;color:{colour};font-size:16px;"
+                              f"line-height:22px;text-align:center;border:2px solid {colour};"
+                              f"box-shadow:0 0 3px #0006'>★</div>"),
+                    ),
+                    z_index_offset=900,
+                ).add_to(fmap)
+            elif status == "recommended":
                 n = rank[c.meter.object_id]
                 folium.Marker(
                     (c.lat, c.lon),
@@ -164,8 +179,9 @@ with right:
         st.rerun()
     st.caption("Distances are approximate straight-line distances, not walking routes. "
                "Map data © OpenStreetMap contributors.")
-    st.caption(" · ".join(f"<span style='color:{c}'>●</span> {l}"
-                          for c, l in STATUS_STYLE.values()), unsafe_allow_html=True)
+    st.caption(" · ".join([f"<span style='color:{c}'>●</span> {l}"
+                           for c, l in STATUS_STYLE.values()] + [CLOSEST_LEGAL_LABEL]),
+               unsafe_allow_html=True)
 
 # --- Results ----------------------------------------------------------------------
 
@@ -185,12 +201,18 @@ with left:
             m = c.meter
             with st.container(border=True):
                 st.markdown(f"**#{i} · Meter {m.meter_id}**")
-                st.markdown(f"Estimated cost: **${c.result.estimated_cost:.2f}**  \n"
+                st.markdown(f"Estimated cost: **\\${c.result.estimated_cost:.2f}**  \n"
                             f"About {c.distance_m:.0f} m away  \n"
-                            f"Rates: ${m.rate_day:.2f}/h daytime · "
-                            f"${m.rate_evening:.2f}/h evening")
+                            f"Rates: \\${m.rate_day:.2f}/h daytime · "
+                            f"\\${m.rate_evening:.2f}/h evening")
                 for w in c.result.warnings:
                     st.caption(w)
+
+        near = result.closest_legal
+        if near and near not in result.recommendations:
+            st.markdown(f"★ **Closest legal option:** Meter {near.meter.meter_id}, about "
+                        f"{near.distance_m:.0f} m away, estimated "
+                        f"\\${near.result.estimated_cost:.2f}.")
 
         if not result.recommendations:
             supported = [c for c in result.candidates if c.result.supported]

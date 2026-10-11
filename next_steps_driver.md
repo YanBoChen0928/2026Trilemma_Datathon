@@ -44,7 +44,7 @@ YB 出問題時：`git diff main` 比對差異；`git restore --source=main <檔
 - [x] 整合與部署負責人：你（Anahid 可能一起）。你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
 - [x] 共用資料格式：照 handoff §6.1、§9.1。
 - [x] Demo 情境：市中心、2026-10-13（星期二，平日）晚上 6:00 抵達、停留 2 小時。
-- [ ] Demo 目的地：Step 4 完成後，在市中心試幾個地點，挑「最近的停車表不能推薦、附近仍有合法選項」的地點；做 `Load demo example` 前要確定。
+- [x] Demo 目的地：400 W Hastings St（街區座標取自 `data/block_coords.csv`）。理由與展示流程見 README「Demo scenario」。
 - [x] Python 版本與 `requirements.txt`：見 Step 1。
 - [ ] **等組員回覆**：部署平台（建議 Streamlit Community Cloud）。
 - [ ] **等組員回覆**：Anahid 與 Juwon 的市府視角分工。

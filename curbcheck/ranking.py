@@ -41,6 +41,11 @@ class SearchResult:
     def closest(self) -> Candidate | None:
         return self.candidates[0] if self.candidates else None
 
+    @property
+    def closest_legal(self) -> Candidate | None:
+        """The nearest meter that appears legal for the stay, whatever its cost."""
+        return next((c for c in self.candidates if c.recommendable), None)
+
 
 def load_meters(path: Path = CLEAN_PATH) -> pd.DataFrame:
     return pd.read_csv(path)

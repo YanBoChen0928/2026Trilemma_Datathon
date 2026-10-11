@@ -17,6 +17,26 @@ Posted signs take precedence over CurbCheck's results.
 
 Team conventions are in `CONTRIBUTING.md`.
 
+## Driver View meter data
+
+`python -m curbcheck.meters` reads the meter snapshot in `data/raw/` and writes `data/meters_clean.csv` and `data/meters_preprocessing_report.json`.
+
+**Source:** City of Vancouver open data, `parking-meters`, snapshot downloaded 2026-10-11 19:11 UTC (3,642 records). After preprocessing, 2,760 records citywide (636 Downtown) can be evaluated by the rules engine; the report lists every reason a record was excluded. Rule interpretations and their official sources are in `references.md`, Section 5.
+
+## Demo scenario
+
+`Load demo example` on the Driver View loads **400 W Hastings St, Tuesday, October 13, 2026, arriving at 6:00 pm for 2 hours**. The coordinate is the 400 W Hastings block location from `data/block_coords.csv`.
+
+**Why this location.** We checked every Downtown block with a known coordinate against three criteria: at least three recommendations at 6:00 pm, a closest meter that is rejected by a specific parking rule rather than by missing data, and a clear change when the arrival time moves earlier. 400 W Hastings met all three most clearly:
+
+1. **The closest meter, about 17 m away, is not recommended at 6:00 pm.** Its listed PM rush-hour restriction runs from 3:00 pm to 7:00 pm, so a driver who assumes the evening has started would still be parking in a rush-hour zone.
+2. **Legal options exist and the trade-off is visible.** The three recommendations cost an estimated $4.00 each and are about 130–170 m away, while other legal meters nearby cost more, so the cheapest option is not the closest one.
+3. **Time changes the answer.** Moving the arrival to 5:00 pm raises the number of conflicting meters within 250 m from 12 to 32, mostly because of rush-hour overlaps.
+
+**Demo flow.** Load the demo example and walk through the recommendations; hover over the closest red marker to show the rush-hour reason; then change the arrival time to 5:00 pm and show how many more meters conflict.
+
+These results come from the 2026-10-11 snapshot. A later snapshot may change them.
+
 ## City View ticket data
 
 `python scripts/build_tickets.py` reads the raw files in `data/raw/` and writes `data/tickets_block_agg.csv` (plus `data/block_coords.csv` and a run log, `data/tickets_report.txt`). The page reads the CSV; it does not clean raw data.
