@@ -23,9 +23,9 @@ During the Step 2 inventory of the raw meter snapshot, three questions came up t
 
 ## 2. Rush-hour fields do not state which days they apply
 
-**Status: Adopted — Option A (team decision, 2026-10-11).** Recorded in `references.md` §5.4; handoff §7.2 step 6 still to be updated.
+**Status: Adopted — Option A (team decision, 2026-10-11).** Recorded in `references.md` §5.4 and handoff §7.2 step 6.
 
-**Finding.** `am_rush_hours` and `pm_rush_hours` contain only a time range (e.g., `7:00am to 10:00am`, `3:00pm to 7:00pm`) with no days of the week. Posted rush-hour restrictions are usually weekday-only, but the dataset does not say so, and handoff §7.2 step 6 does not address weekends.
+**Finding.** `am_rush_hours` and `pm_rush_hours` contain only a time range (e.g., `7:00am to 10:00am`, `3:00pm to 7:00pm`) with no days of the week. Posted rush-hour restrictions are usually weekday-only, but the dataset does not say so.
 
 **Options.**
 

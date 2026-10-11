@@ -1,0 +1,25 @@
+{
+  "dataset_id": "parking-meters",
+  "source_url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/parking-meters/exports/csv?delimiter=%2C",
+  "snapshot_file": "parking-meters_2026-10-11.csv",
+  "downloaded_at": "2026-10-11T19:11:12Z",
+  "total_records": 3642,
+  "supported_records": 2760,
+  "supported_downtown": 636,
+  "unsupported_records": 882,
+  "unsupported_by_reason": {
+    "Not in service.": 378,
+    "Vehicle-specific record.": 248,
+    "Missing time_limit_9am_6pm.": 154,
+    "Missing time_limit_weekend_9am_6pm.": 148,
+    "Flat-rate option not supported.": 144,
+    "Time-limit override semantics not verified.": 90,
+    "Missing time_limit_6pm_10pm.": 86,
+    "Missing time_limit_weekend_6pm_10pm.": 86,
+    "Prohibition override semantics not verified.": 5,
+    "Partially filled prohibition group 1.": 1
+  },
+  "parse_failures_by_field": {},
+  "duplicate_meter_id_values": 1,
+  "duplicate_meter_id_records": 2
+}

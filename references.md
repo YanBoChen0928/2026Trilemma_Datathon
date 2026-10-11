@@ -134,7 +134,7 @@ New questions are added to this section as they arise. Where an official source 
 - **What the sources say:** Rush-hour restrictions prohibit stopping during peak hours. The dataset records only a time range (e.g., `7:00am to 10:00am`).
 - **What they do not say:** Which days of the week the restriction applies.
 - **MVP rule:** Apply rush-hour restrictions every day. This can only make results more conservative. The UI notes that days are not specified in the data.
-- **Implemented in:** handoff §7.2 step 6 (to be updated).
+- **Implemented in:** handoff §7.2 step 6.
 
 ### 5.5 Prohibition time formats and cross-midnight intervals
 
@@ -144,7 +144,10 @@ New questions are added to this section as they arise. Where an official source 
 - **Related official guidance:** City enforcement material (FOI release 2019-093, part 4, pages 763 and 782) states that signs without specific times are in effect 24 hours a day, which supports parsing `Anytime` as all day.
 - **What they do not say:** For a day-specific prohibition that crosses midnight (e.g., `Tuesdays`, `6:00pm to 2:00am`), whether the early-morning part belongs to the listed day or the following day.
 - **MVP rule:** Preprocessing keeps the full 24-hour interval and flags intervals that cross midnight; the rules engine checks them against the stay's actual timeline (5.11). A cross-midnight interval is attributed to the day on which it starts (Tuesday 6:00 pm to Wednesday 2:00 am).
-- **Implemented in:** handoff §6.2 (to be updated).
+- **Implemented in:** handoff §6.1 and §6.2.
+- **Implementation notes (no team decision needed):**
+  1. Parsed prohibition days are stored in an extra column, `prohibition_N_weekdays`, as comma-separated day numbers (Monday = 0); an unparseable day value makes the record unsupported.
+  2. Rush-hour endpoints (`am_rush_start` and the others) are stored as minutes after midnight, like the prohibition endpoints. A rush interval that would cross midnight is treated as unparseable; none exist in the 2026-10-11 snapshot.
 
 ### 5.6 Overnight restrictions outside the meter dataset
 
