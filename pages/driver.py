@@ -68,6 +68,16 @@ def limit_text(minutes):
     return "No limit" if minutes == NO_TIME_LIMIT else f"{minutes} min"
 
 
+TOOLTIP_STYLE = ("white-space: normal; width: max-content; max-width: 280px; "
+                 "font-size: 13px;")
+
+
+def tooltip(title, label, reason=""):
+    """A wrapped tooltip so long reasons stay inside the map."""
+    html = f"<b>{title}</b><br>{label}" + (f"<br><i>{reason}</i>" if reason else "")
+    return folium.Tooltip(html, style=TOOLTIP_STYLE)
+
+
 def status_of(candidate, recommended_ids):
     r = candidate.result
     if not r.supported:
@@ -81,6 +91,7 @@ def status_of(candidate, recommended_ids):
 
 # --- Inputs -----------------------------------------------------------------------
 
+st.page_link("app.py", label="Home", icon="🏠")
 st.title("Driver View")
 st.caption("Find metered street parking that appears legal for your whole stay.")
 
@@ -115,19 +126,35 @@ with right:
                       icon=folium.Icon(color="blue", icon="flag")).add_to(fmap)
         folium.Circle(state.dest, radius=SEARCH_RADIUS_M, color="#0969da",
                       weight=1, fill=False, dash_array="6").add_to(fmap)
-    if result:
+    if result and not result.scope_reason:
         rec_ids = {c.meter.object_id for c in result.recommendations}
         rank = {c.meter.object_id: i for i, c in enumerate(result.recommendations, 1)}
         for c in result.candidates:
             status = status_of(c, rec_ids)
             colour, label = STATUS_STYLE[status]
-            prefix = f"#{rank[c.meter.object_id]} " if status == "recommended" else ""
-            folium.CircleMarker(
-                (c.lat, c.lon), radius=9 if status == "recommended" else 6,
-                color=colour, fill=True, fill_opacity=0.85, weight=2,
-                tooltip=f"{prefix}Meter {c.meter.meter_id} — {label}",
-            ).add_to(fmap)
+            if status == "recommended":
+                n = rank[c.meter.object_id]
+                folium.Marker(
+                    (c.lat, c.lon),
+                    tooltip=tooltip(f"#{n} Meter {c.meter.meter_id}", label),
+                    icon=folium.DivIcon(
+                        icon_size=(26, 26), icon_anchor=(13, 13),
+                        html=(f"<div style='width:26px;height:26px;border-radius:50%;"
+                              f"background:{colour};color:white;font-weight:700;"
+                              f"font-size:14px;line-height:26px;text-align:center;"
+                              f"border:2px solid white;box-shadow:0 0 3px #0006'>{n}</div>"),
+                    ),
+                    z_index_offset=1000,
+                ).add_to(fmap)
+            else:
+                folium.CircleMarker(
+                    (c.lat, c.lon), radius=6, color=colour, fill=True,
+                    fill_opacity=0.85, weight=2,
+                    tooltip=tooltip(f"Meter {c.meter.meter_id}", label,
+                                    c.result.reasons[0] if c.result.reasons else ""),
+                ).add_to(fmap)
 
+    st.caption("Drag or zoom the map, then click to set your destination.")
     clicked = st_folium(fmap, key="driver_map", height=520, use_container_width=True,
                         returned_objects=["last_clicked"])
     click = (clicked or {}).get("last_clicked")
@@ -135,8 +162,7 @@ with right:
         state.last_click = click
         state.dest = (click["lat"], click["lng"])
         st.rerun()
-    st.caption("Click the map to set your destination. Distances are approximate "
-               "straight-line distances, not walking routes. "
+    st.caption("Distances are approximate straight-line distances, not walking routes. "
                "Map data © OpenStreetMap contributors.")
     st.caption(" · ".join(f"<span style='color:{c}'>●</span> {l}"
                           for c, l in STATUS_STYLE.values()), unsafe_allow_html=True)
@@ -152,6 +178,9 @@ with left:
     elif not result.candidates:
         st.warning(f"No meter records were found within {SEARCH_RADIUS_M} m of this destination.")
     else:
+        if result.recommendations:
+            st.caption("Ranked by estimated cost; when costs are equal, the nearer "
+                       "meter comes first. Numbers match the map.")
         for i, c in enumerate(result.recommendations, 1):
             m = c.meter
             with st.container(border=True):

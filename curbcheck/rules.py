@@ -14,9 +14,9 @@ NO_TIME_LIMIT = -1
 MAX_STAY_MINUTES = 24 * 60
 THREE_HOUR_GUARD_MINUTES = 180
 
-# Day 2 deployment restriction (handoff §3.2). Set to False once the timeline
-# tests in handoff §12 pass.
-SAME_DAY_WINDOW_ONLY = True
+# Day 2 deployment restriction (handoff §3.2). The timeline tests in handoff §12
+# pass, so the restriction is off; set to True to restore the same-day window.
+SAME_DAY_WINDOW_ONLY = False
 
 DAY_START = 9 * 60       # 9:00 am
 EVENING_START = 18 * 60  # 6:00 pm

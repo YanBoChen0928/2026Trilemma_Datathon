@@ -21,8 +21,9 @@ def row(object_id, north_m, rate_evening=2.0, supported=True, limit_evening=240)
     }
 
 
-def search(*rows, minutes=120):
-    return find_parking(pd.DataFrame(rows), *DEST, TUESDAY_6PM, minutes)
+def search(*rows, minutes=120, same_day_only=None):
+    return find_parking(pd.DataFrame(rows), *DEST, TUESDAY_6PM, minutes,
+                        same_day_only=same_day_only)
 
 
 def test_distance_is_about_right():
@@ -50,6 +51,6 @@ def test_closest_record_is_reported_even_if_rejected():
 
 
 def test_out_of_scope_stay():
-    r = search(row("ok", 90), minutes=5 * 60)  # 6:00-11:00 pm, past the Day 2 window
+    r = search(row("ok", 90), minutes=5 * 60, same_day_only=True)  # past the Day 2 window
     assert r.scope_reason is not None
     assert r.recommendations == []
