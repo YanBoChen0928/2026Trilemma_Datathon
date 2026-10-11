@@ -128,12 +128,32 @@ def tooltip(title, label, reason=""):
     return folium.Tooltip(html, style=TOOLTIP_STYLE)
 
 
-def badge_marker(lat, lon, text, fg, bg, border, tip, z):
+def popup(candidate, title, extra=""):
+    """Click popup with the card summary and a directions link."""
+    return folium.Popup(_popup_html(candidate, title, extra), max_width=280)
+
+
+def _popup_html(candidate, title, extra=""):
+    c, m = candidate, candidate.meter
+    cost = c.result.estimated_cost
+    html = (f"<div style='font-size:13px;line-height:1.5'><b>{title}</b><br>"
+            + (f"${cost:.2f} · " if cost is not None else "")
+            + f"About {c.distance_m:.0f} m away<br>"
+            + (f"<span style='color:#57606a'>Daytime ${m.rate_day:.2f}/h · "
+               f"Evening ${m.rate_evening:.2f}/h</span><br>" if m.rate_day is not None else "")
+            + (f"<i>{extra}</i><br>" if extra else "")
+            + f"<a href='{directions_url(c.lat, c.lon)}' target='_blank' rel='noopener'>"
+              "Directions ↗</a></div>")
+    return html
+
+
+def badge_marker(lat, lon, text, fg, bg, border, tip, z, pop=None):
+    width = 26 + 9 * max(0, len(str(text)) - 1)
     return folium.Marker(
-        (lat, lon), tooltip=tip, z_index_offset=z,
+        (lat, lon), tooltip=tip, z_index_offset=z, popup=pop,
         icon=folium.DivIcon(
-            icon_size=(26, 26), icon_anchor=(13, 13),
-            html=(f"<div style='width:26px;height:26px;border-radius:50%;background:{bg};"
+            icon_size=(width, 26), icon_anchor=(width // 2, 13),
+            html=(f"<div style='width:{width}px;height:26px;border-radius:13px;background:{bg};"
                   f"color:{fg};font-weight:700;font-size:14px;line-height:22px;"
                   f"text-align:center;border:2px solid {border};"
                   f"box-shadow:0 0 3px #0006'>{text}</div>")))
@@ -212,20 +232,23 @@ with right:
             colour, label = STATUS_STYLE[status]
             reason = c.result.reasons[0] if c.result.reasons else ""
             if status == "recommended":
-                n = rank[c.meter.object_id]
-                badge_marker(c.lat, c.lon, n, "white", colour, "white",
-                             tooltip(f"#{n} Meter {c.meter.meter_id}", label),
-                             1000).add_to(layer)
+                continue  # drawn below, grouped by location
             elif c is near:
                 badge_marker(c.lat, c.lon, "★", colour, "white", colour,
                              tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
-                                     f"Estimated ${c.result.estimated_cost:.2f}"),
-                             900).add_to(layer)
+                                     f"Estimated ${c.result.estimated_cost:.2f}"), 900,
+                             popup(c, f"★ Meter {c.meter.meter_id}",
+                                   "Closest legal option")).add_to(layer)
             elif c is closest:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=9, color="white", weight=3, fill=True,
                     fill_color=colour, fill_opacity=1,
                     tooltip=tooltip(f"Closest meter · {c.meter.meter_id}", label, reason),
+                    popup=folium.Popup(
+                        f"<div style='font-size:13px;line-height:1.5'><b>Closest meter · "
+                        f"{c.meter.meter_id}</b><br>About {c.distance_m:.0f} m away<br>"
+                        f"<b style='color:{WARN}'>{label}</b><br><i>{reason}</i></div>",
+                        max_width=280),
                 ).add_to(layer)
             elif state.show_all:
                 folium.CircleMarker(
@@ -233,6 +256,26 @@ with right:
                     fill_opacity=0.6, weight=1,
                     tooltip=tooltip(f"Meter {c.meter.meter_id}", label, reason),
                 ).add_to(layer)
+
+    if evaluated:
+        # Several meter records can share one block-face coordinate; draw one badge per spot.
+        spots = {}
+        for n, c in enumerate(result.recommendations, 1):
+            spots.setdefault((round(c.lat, 6), round(c.lon, 6)), []).append((n, c))
+        green = STATUS_STYLE["recommended"][0]
+        for group in spots.values():
+            first = group[0][1]
+            label = "·".join(str(n) for n, _ in group)
+            names = ", ".join(f"#{n} {c.meter.meter_id}" for n, c in group)
+            note = "Same block-face location in the data" if len(group) > 1 else ""
+            pop = folium.Popup(
+                "<hr style='margin:4px 0'>".join(
+                    _popup_html(c, f"#{n} · Meter {c.meter.meter_id}")
+                    for n, c in group)
+                + (f"<div style='font-size:12px;color:#57606a'><i>{note}</i></div>" if note else ""),
+                max_width=280)
+            badge_marker(first.lat, first.lon, label, "white", green, "white",
+                         tooltip(names, "Recommended", note), 1000, pop).add_to(layer)
 
     if pointer:
         row, dist = pointer
