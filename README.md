@@ -15,6 +15,23 @@ streamlit run app.py
 
 Posted signs take precedence over CurbCheck's results.
 
+## Data sources and licence
+
+All data comes from the City of Vancouver Open Data portal. The Trilemma Foundation data catalog links to these datasets; it does not host or relicense them. Raw snapshots are kept in `data/raw/` and are not committed; the app reads only the processed files in `data/`.
+
+| Dataset (ID) | Used for | Source | Snapshot |
+| --- | --- | --- | --- |
+| Parking meters (`parking-meters`) | Driver View rules, rates, map; City View rate layer | https://opendata.vancouver.ca/explore/dataset/parking-meters/ | Downloaded 2026-10-11 19:11 UTC, 3,642 records |
+| Parking tickets 2026 (`parking-tickets`) | City View, 2026-01-01 to 2026-06-30 | https://opendata.vancouver.ca/explore/dataset/parking-tickets/ | Downloaded October 2026 |
+| Parking tickets 2020–2025 (`parking-tickets-2020-2025`) | City View, 2025 rows | https://opendata.vancouver.ca/explore/dataset/parking-tickets-2020-2025/ | Downloaded October 2026 |
+| Property addresses (`property-addresses`) | Block coordinates for tickets; demo destination coordinate | https://opendata.vancouver.ca/explore/dataset/property-addresses/ | Downloaded October 2026 |
+
+**Licence.** Contains information licensed under the Open Government Licence – Vancouver (https://opendata.vancouver.ca/pages/licence/).
+
+**Map.** Base map tiles and map data © OpenStreetMap contributors (https://www.openstreetmap.org/copyright).
+
+**Parking rules.** The by-laws, City pages, and Council records used to interpret parking rules are listed in `references.md`.
+
 Team conventions are in `CONTRIBUTING.md`.
 
 ## Driver View meter data

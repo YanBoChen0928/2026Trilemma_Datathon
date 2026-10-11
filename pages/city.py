@@ -281,3 +281,8 @@ st.caption(
     "are not included. 98.4% of tickets were matched to a block (8,437 unmatched tickets are "
     "not mapped); 32,273 matched tickets citywide sit on blocks with estimated coordinates."
 )
+st.caption(
+    "Contains information licensed under the "
+    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
+    "Map data © OpenStreetMap contributors."
+)
