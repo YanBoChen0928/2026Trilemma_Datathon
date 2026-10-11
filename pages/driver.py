@@ -3,6 +3,7 @@
 Find street parking that is legal for the whole stay and estimate its cost.
 Spec: mvp_implementation_handoff_en.md, Sections 6–8.
 """
+import re
 from collections import Counter
 from datetime import date, datetime, time, timedelta
 
@@ -20,8 +21,9 @@ DEMO = {  # 400 W Hastings St, Tuesday 6:00 pm, 2 hours (README, "Demo scenario"
     "dest": (49.28370197906036, -123.11137913860121),
     "date": date(2026, 10, 13),
     "time": time(18, 0),
-    "hours": 2.0,
+    "duration": "2 hr",
 }
+DURATIONS = {"30 min": 30, "1 hr": 60, "2 hr": 120, "3 hr": 180, "Custom": None}
 SCOPE_TEXT = ("Same-day stays between 9:00 am and 10:00 pm." if SAME_DAY_WINDOW_ONLY
               else "Stays of up to 24 hours that cross at most one midnight.")
 STATUS_STYLE = {  # status -> (marker colour, label)
@@ -31,7 +33,12 @@ STATUS_STYLE = {  # status -> (marker colour, label)
     "uncertain": ("#bf8700", "Uncertain rule — not recommended"),
     "unsupported": ("#8c959f", "Data not supported"),
 }
+WARN = "#bc4c00"
 CLOSEST_LEGAL_LABEL = "★ Closest legal option"
+TOOLTIP_STYLE = ("white-space: normal; width: max-content; max-width: 280px; "
+                 "font-size: 13px;")
+RUSH_RE = re.compile(r"Overlaps the listed (.+?) restriction \((.+?)\)\. (.*)")
+PROHIBITION_RE = re.compile(r"Overlaps a (.+?) restriction listed in the meter dataset \((.+)\)\.$")
 
 
 @st.cache_data
@@ -39,28 +46,45 @@ def meters():
     return load_meters()
 
 
-# --- Session state --------------------------------------------------------------
+# --- Session state ----------------------------------------------------------------
 
 state = st.session_state
 state.setdefault("dest", None)
 state.setdefault("last_click", None)
 state.setdefault("arrival_date", date.today())
 state.setdefault("arrival_time", time(18, 0))
-state.setdefault("duration_hours", 2.0)
+state.setdefault("duration_choice", "2 hr")
+state.setdefault("custom_hours", 2.0)
 state.setdefault("adv_lat", DOWNTOWN[0])
 state.setdefault("adv_lon", DOWNTOWN[1])
+state.setdefault("show_all", False)
 
 
 def load_demo():
     state.dest = DEMO["dest"]
     state.arrival_date = DEMO["date"]
     state.arrival_time = DEMO["time"]
-    state.duration_hours = DEMO["hours"]
+    state.duration_choice = DEMO["duration"]
     state.adv_lat, state.adv_lon = DEMO["dest"]
 
 
 def use_coordinates():
     state.dest = (state.adv_lat, state.adv_lon)
+
+
+def handle_map_click():
+    """Set the destination from a map click before the page reruns."""
+    click = (state.get("driver_map") or {}).get("last_clicked")
+    if click and click != state.last_click:
+        state.last_click = click
+        state.dest = (click["lat"], click["lng"])
+
+
+# --- Helpers ----------------------------------------------------------------------
+
+def money(value):
+    """Dollar amount for st.markdown, escaped so Streamlit does not read it as math."""
+    return f"\\${value:.2f}"
 
 
 def limit_text(minutes):
@@ -69,14 +93,40 @@ def limit_text(minutes):
     return "No limit" if minutes == NO_TIME_LIMIT else f"{minutes} min"
 
 
-TOOLTIP_STYLE = ("white-space: normal; width: max-content; max-width: 280px; "
-                 "font-size: 13px;")
+def split_reason(reason):
+    """Split an engine reason into a short main line and an optional note."""
+    if m := RUSH_RE.match(reason):
+        return f"{m[1]} restriction: {m[2]}", m[3]
+    if m := PROHIBITION_RE.match(reason):
+        return f"{m[1].title()} restriction: {m[2]}", "Listed in the meter dataset."
+    first, _, rest = reason.partition(". ")
+    return (first if not rest else first + "."), rest
+
+
+def directions_url(lat, lon):
+    """Google Maps driving directions by URL; no API key or service call."""
+    return ("https://www.google.com/maps/dir/?api=1"
+            f"&destination={lat:.6f},{lon:.6f}&travelmode=driving")
+
+
+def clock(dt):
+    return dt.strftime("%I:%M %p").lstrip("0").replace("AM", "am").replace("PM", "pm")
 
 
 def tooltip(title, label, reason=""):
-    """A wrapped tooltip so long reasons stay inside the map."""
     html = f"<b>{title}</b><br>{label}" + (f"<br><i>{reason}</i>" if reason else "")
     return folium.Tooltip(html, style=TOOLTIP_STYLE)
+
+
+def badge_marker(lat, lon, text, fg, bg, border, tip, z):
+    return folium.Marker(
+        (lat, lon), tooltip=tip, z_index_offset=z,
+        icon=folium.DivIcon(
+            icon_size=(26, 26), icon_anchor=(13, 13),
+            html=(f"<div style='width:26px;height:26px;border-radius:50%;background:{bg};"
+                  f"color:{fg};font-weight:700;font-size:14px;line-height:22px;"
+                  f"text-align:center;border:2px solid {border};"
+                  f"box-shadow:0 0 3px #0006'>{text}</div>")))
 
 
 def status_of(candidate, recommended_ids):
@@ -90,160 +140,218 @@ def status_of(candidate, recommended_ids):
     return "conflict" if r.legal is False else "uncertain"
 
 
-# --- Inputs -----------------------------------------------------------------------
+# --- Header and inputs ------------------------------------------------------------
 
 st.page_link("app.py", label="Home", icon="🏠")
 st.title("Driver View")
 st.caption("Find metered street parking that appears legal for your whole stay.")
+with st.expander("Demo tools"):
+    st.button("Load demo example", on_click=load_demo)
 
-left, right = st.columns([1, 2], gap="large")
+left, right = st.columns([2, 3], gap="large")
 
 with left:
     st.subheader("Your stay")
+    st.caption("Tap the map to choose a destination, then set your arrival time and duration.")
+    if state.dest:
+        st.markdown(":green[**✓ Destination selected**]")
+    else:
+        st.markdown(":gray[No destination yet]")
     st.date_input("Date", key="arrival_date")
     st.time_input("Arrival time", key="arrival_time", step=timedelta(minutes=15))
-    st.number_input("Duration (hours)", key="duration_hours",
-                    min_value=0.25, max_value=24.0, step=0.25)
+    st.segmented_control("Duration", list(DURATIONS), key="duration_choice")
+    if state.duration_choice in (None, "Custom"):
+        st.number_input("Custom duration (hours)", key="custom_hours",
+                        min_value=0.25, max_value=24.0, step=0.25)
+    preset = DURATIONS.get(state.duration_choice)
+    duration = preset if preset else int(round(state.custom_hours * 60))
+    arrival = datetime.combine(state.arrival_date, state.arrival_time)
+    departure = arrival + timedelta(minutes=duration)
+    end_day = "" if departure.date() == arrival.date() else departure.strftime("%a ")
+    st.markdown(f"**{arrival:%a, %b} {arrival.day} · {clock(arrival)} → "
+                f"{end_day}{clock(departure)}**")
     st.caption(f"Currently supported: {SCOPE_TEXT}")
-    st.button("Load demo example", on_click=load_demo)
-
     with st.expander("Advanced: enter coordinates"):
         st.number_input("Latitude", key="adv_lat", format="%.6f")
         st.number_input("Longitude", key="adv_lon", format="%.6f")
         st.button("Use these coordinates", on_click=use_coordinates)
 
-arrival = datetime.combine(state.arrival_date, state.arrival_time)
-duration = int(round(state.duration_hours * 60))
-result = (find_parking(meters(), *state.dest, arrival, duration)
-          if state.dest else None)
+result = find_parking(meters(), *state.dest, arrival, duration) if state.dest else None
+evaluated = bool(result and not result.scope_reason and result.candidates)
+rec_ids = {c.meter.object_id for c in result.recommendations} if evaluated else set()
 
 # --- Map --------------------------------------------------------------------------
 
 with right:
-    fmap = folium.Map(location=state.dest or DOWNTOWN, zoom_start=17,
-                      tiles="OpenStreetMap", control_scale=True)
+    st.toggle("Show all nearby meters", key="show_all")
+    fmap = folium.Map(location=DOWNTOWN, zoom_start=16, tiles="OpenStreetMap",
+                      control_scale=True)
+    layer = folium.FeatureGroup(name="results")
     if state.dest:
         folium.Marker(state.dest, tooltip="Destination",
-                      icon=folium.Icon(color="blue", icon="flag")).add_to(fmap)
+                      icon=folium.Icon(color="blue", icon="flag")).add_to(layer)
         folium.Circle(state.dest, radius=SEARCH_RADIUS_M, color="#0969da",
-                      weight=1, fill=False, dash_array="6").add_to(fmap)
-    if result and not result.scope_reason:
-        rec_ids = {c.meter.object_id for c in result.recommendations}
+                      weight=1, fill=False, dash_array="6").add_to(layer)
+    if evaluated:
         rank = {c.meter.object_id: i for i, c in enumerate(result.recommendations, 1)}
+        near, closest = result.closest_legal, result.closest
         for c in result.candidates:
             status = status_of(c, rec_ids)
             colour, label = STATUS_STYLE[status]
-            if status == "legal" and c is result.closest_legal:
-                folium.Marker(
-                    (c.lat, c.lon),
-                    tooltip=tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
-                                    f"Estimated ${c.result.estimated_cost:.2f}"),
-                    icon=folium.DivIcon(
-                        icon_size=(26, 26), icon_anchor=(13, 13),
-                        html=(f"<div style='width:26px;height:26px;border-radius:50%;"
-                              f"background:white;color:{colour};font-size:16px;"
-                              f"line-height:22px;text-align:center;border:2px solid {colour};"
-                              f"box-shadow:0 0 3px #0006'>★</div>"),
-                    ),
-                    z_index_offset=900,
-                ).add_to(fmap)
-            elif status == "recommended":
+            reason = c.result.reasons[0] if c.result.reasons else ""
+            if status == "recommended":
                 n = rank[c.meter.object_id]
-                folium.Marker(
-                    (c.lat, c.lon),
-                    tooltip=tooltip(f"#{n} Meter {c.meter.meter_id}", label),
-                    icon=folium.DivIcon(
-                        icon_size=(26, 26), icon_anchor=(13, 13),
-                        html=(f"<div style='width:26px;height:26px;border-radius:50%;"
-                              f"background:{colour};color:white;font-weight:700;"
-                              f"font-size:14px;line-height:26px;text-align:center;"
-                              f"border:2px solid white;box-shadow:0 0 3px #0006'>{n}</div>"),
-                    ),
-                    z_index_offset=1000,
-                ).add_to(fmap)
-            else:
+                badge_marker(c.lat, c.lon, n, "white", colour, "white",
+                             tooltip(f"#{n} Meter {c.meter.meter_id}", label),
+                             1000).add_to(layer)
+            elif c is near:
+                badge_marker(c.lat, c.lon, "★", colour, "white", colour,
+                             tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
+                                     f"Estimated ${c.result.estimated_cost:.2f}"),
+                             900).add_to(layer)
+            elif c is closest:
+                folium.CircleMarker(
+                    (c.lat, c.lon), radius=9, color="white", weight=3, fill=True,
+                    fill_color=colour, fill_opacity=1,
+                    tooltip=tooltip(f"Closest meter · {c.meter.meter_id}", label, reason),
+                ).add_to(layer)
+            elif state.show_all:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=6, color=colour, fill=True,
-                    fill_opacity=0.85, weight=2,
-                    tooltip=tooltip(f"Meter {c.meter.meter_id}", label,
-                                    c.result.reasons[0] if c.result.reasons else ""),
-                ).add_to(fmap)
+                    fill_opacity=0.6, weight=1,
+                    tooltip=tooltip(f"Meter {c.meter.meter_id}", label, reason),
+                ).add_to(layer)
 
-    st.caption("Drag or zoom the map, then click to set your destination.")
-    clicked = st_folium(fmap, key="driver_map", height=520, use_container_width=True,
-                        returned_objects=["last_clicked"])
-    click = (clicked or {}).get("last_clicked")
-    if click and click != state.last_click:
-        state.last_click = click
-        state.dest = (click["lat"], click["lng"])
-        st.rerun()
+    st_folium(fmap, key="driver_map", height=520, use_container_width=True,
+              feature_group_to_add=layer, center=state.dest or DOWNTOWN,
+              returned_objects=["last_clicked"], on_change=handle_map_click)
+    green, red = STATUS_STYLE["recommended"][0], STATUS_STYLE["conflict"][0]
+    short = {"recommended": "Recommended", "legal": "Legal, not in top 3",
+             "conflict": "Conflicts with a rule", "uncertain": "Uncertain rule",
+             "unsupported": "Data not supported"}
+    items = ([(STATUS_STYLE[k][0], "●", v) for k, v in short.items()] if state.show_all else
+             [(green, "●", "Recommended"), (red, "●", "Not recommended")])
+    items.append((green, "★", "Closest legal option"))
+    st.markdown(
+        "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"
+        "gap:0.25rem 1rem;font-size:0.875rem;color:#6e7781'>"
+        + "".join(f"<span style='white-space:nowrap'><span style='color:{c}'>{s}</span> "
+                  f"{l}</span>" for c, s, l in items)
+        + "</div>", unsafe_allow_html=True)
     st.caption("Distances are approximate straight-line distances, not walking routes. "
                "Map data © OpenStreetMap contributors.")
-    st.caption(" · ".join([f"<span style='color:{c}'>●</span> {l}"
-                           for c, l in STATUS_STYLE.values()] + [CLOSEST_LEGAL_LABEL]),
-               unsafe_allow_html=True)
 
-# --- Results ----------------------------------------------------------------------
+# --- Results (full width) -----------------------------------------------------------
 
-with left:
-    st.subheader("Results")
-    if not state.dest:
-        st.write("Click the map to set your destination, or load the demo example.")
-    elif result.scope_reason:
-        st.warning(result.scope_reason)
-    elif not result.candidates:
-        st.warning(f"No meter records were found within {SEARCH_RADIUS_M} m of this destination.")
+st.divider()
+st.subheader("Results")
+
+if not state.dest:
+    st.write("Tap the map to choose a destination, or open Demo tools to load the example.")
+elif result.scope_reason:
+    st.warning(result.scope_reason)
+elif not result.candidates:
+    st.warning(f"No meter records were found within {SEARCH_RADIUS_M} m of this destination. "
+               "Try moving the destination pin.")
+else:
+    recs = result.recommendations
+
+    # Summary
+    if recs:
+        nearest = min(c.distance_m for c in recs)
+        cheapest = min(c.result.estimated_cost for c in recs)
+        st.markdown(f"#### {len(recs)} option{'s' if len(recs) > 1 else ''} found")
+        st.markdown(f"From **{money(cheapest)}** · Nearest recommendation about "
+                    f"**{nearest:.0f} m** away")
+
+    # Closest meter card
+    closest = result.closest
+    status = status_of(closest, rec_ids)
+    if status == "recommended":
+        n = [c.meter.object_id for c in recs].index(closest.meter.object_id) + 1
+        tag, tag_colour, main, note = f"✓ Recommended #{n}", STATUS_STYLE[status][0], "", ""
+    elif status == "legal":
+        tag, tag_colour = "✓ Appears legal", STATUS_STYLE[status][0]
+        main = (f"Not in the top three: estimated {money(closest.result.estimated_cost)}, "
+                "more than the recommendations.")
+        note = ""
     else:
-        if result.recommendations:
-            st.caption("Ranked by estimated cost; when costs are equal, the nearer "
-                       "meter comes first. Numbers match the map.")
-        for i, c in enumerate(result.recommendations, 1):
+        main, note = split_reason(closest.result.reasons[0] if closest.result.reasons else "")
+        tag = {"conflict": "⚠ Not recommended",
+               "uncertain": "⚠ Not recommended — uncertain rule",
+               "unsupported": "Data not supported"}[status]
+        tag_colour = STATUS_STYLE["unsupported"][0] if status == "unsupported" else WARN
+    st.markdown(
+        f"<div style='border-left:4px solid {tag_colour};padding:0.6rem 1rem;"
+        f"background:rgba(188,76,0,0.05);border-radius:4px'>"
+        f"<div style='font-size:0.85rem;color:#57606a'>Closest meter</div>"
+        f"<div style='font-weight:600'>{closest.meter.meter_id} · About "
+        f"{closest.distance_m:.0f} m away</div>"
+        f"<div style='color:{tag_colour};font-weight:700;margin-top:0.4rem'>{tag}</div>"
+        + (f"<div>{main}</div>" if main else "") + "</div>",
+        unsafe_allow_html=True)
+    if note:
+        label = ("Why CurbCheck applies this every day" if "every day" in note
+                 else "More detail")
+        with st.expander(label):
+            st.caption(note)
+
+    # Recommendation cards
+    if recs:
+        st.caption("Ranked by estimated cost; when costs are equal, the nearer meter comes "
+                   "first. Numbers match the map.")
+        for col, (i, c) in zip(st.columns(3), enumerate(recs, 1)):
             m = c.meter
-            with st.container(border=True):
+            with col, st.container(border=True):
                 st.markdown(f"**#{i} · Meter {m.meter_id}**")
-                st.markdown(f"Estimated cost: **\\${c.result.estimated_cost:.2f}**  \n"
-                            f"About {c.distance_m:.0f} m away  \n"
-                            f"Rates: \\${m.rate_day:.2f}/h daytime · "
-                            f"\\${m.rate_evening:.2f}/h evening")
+                st.markdown(f"### {money(c.result.estimated_cost)}")
+                st.markdown(f"About {c.distance_m:.0f} m away")
+                st.caption(f"Daytime {money(m.rate_day)}/h · Evening {money(m.rate_evening)}/h")
                 for w in c.result.warnings:
                     st.caption(w)
+                st.link_button("Directions ↗", directions_url(c.lat, c.lon))
 
         near = result.closest_legal
-        if near and near not in result.recommendations:
+        if near and near not in recs:
             st.markdown(f"★ **Closest legal option:** Meter {near.meter.meter_id}, about "
                         f"{near.distance_m:.0f} m away, estimated "
-                        f"\\${near.result.estimated_cost:.2f}.")
+                        f"{money(near.result.estimated_cost)}. "
+                        f"[Directions ↗]({directions_url(near.lat, near.lon)})")
+        st.caption("Directions open Google Maps to the meter's block, not an exact space.")
+    else:
+        supported = [c for c in result.candidates if c.result.supported]
+        if not supported:
+            st.warning("Meter records near this destination could not be evaluated safely, "
+                       "so CurbCheck cannot recommend one.")
+        else:
+            st.warning("Every nearby meter that CurbCheck can evaluate conflicts with this stay.")
+            st.markdown("**Most common reasons:**")
+            for reason, n in Counter(split_reason(r)[0] for c in supported
+                                     for r in c.result.reasons).most_common(3):
+                st.caption(f"{n} × {reason}")
+        st.markdown("**Try:** a shorter stay, a later arrival time, or moving the "
+                    "destination pin.")
 
-        if not result.recommendations:
-            supported = [c for c in result.candidates if c.result.supported]
-            if not supported:
-                st.warning("Meter records near this destination could not be evaluated "
-                           "safely, so CurbCheck cannot recommend one.")
-            else:
-                st.warning("Every nearby meter that CurbCheck can evaluate conflicts "
-                           "with this stay.")
-                top = Counter(r for c in supported for r in c.result.reasons).most_common(3)
-                for reason, n in top:
-                    st.caption(f"{n} × {reason}")
-
-        closest = result.closest
-        if closest.meter.object_id not in {c.meter.object_id for c in result.recommendations}:
-            why = closest.result.reasons[0] if closest.result.reasons else "Not in the top three."
-            st.info(f"The closest meter ({closest.meter.meter_id}, about "
-                    f"{closest.distance_m:.0f} m away) is not recommended: {why}")
-
-        with st.expander(f"All {len(result.candidates)} meter records within {SEARCH_RADIUS_M} m"):
-            rec_ids = {c.meter.object_id for c in result.recommendations}
-            st.dataframe(
-                [{
-                    "Meter": c.meter.meter_id,
-                    "Distance (m)": round(c.distance_m),
-                    "Status": STATUS_STYLE[status_of(c, rec_ids)][1],
+    # Full table
+    with st.expander(f"All {len(result.candidates)} meter records within {SEARCH_RADIUS_M} m"):
+        details = st.checkbox("Show rates and limits")
+        rows = []
+        for c in result.candidates:
+            row = {
+                "Meter": c.meter.meter_id,
+                "Distance (m)": round(c.distance_m),
+                "Status": STATUS_STYLE[status_of(c, rec_ids)][1],
+                "Main reason": split_reason(c.result.reasons[0])[0] if c.result.reasons else "",
+            }
+            if details:
+                row.update({
                     "Estimated cost": c.result.estimated_cost,
+                    "Daytime rate": c.meter.rate_day,
+                    "Evening rate": c.meter.rate_evening,
                     "Daytime limit": limit_text(c.meter.limit_day),
-                    "Reasons": "; ".join(c.result.reasons),
-                } for c in result.candidates],
-                hide_index=True, width="stretch",
-            )
+                    "Evening limit": limit_text(c.meter.limit_evening),
+                })
+            rows.append(row)
+        st.dataframe(rows, hide_index=True, width="stretch")
 
-    st.info("Posted signs take precedence.")
+st.info("Posted signs take precedence.")

@@ -287,7 +287,7 @@ A stay within a single window is evaluated normally, since A and B give the same
 - Inputs: date, arrival time, and duration.
 - Show the currently supported scope beside the inputs.
 - Include stable default demo values or a `Load demo example` action.
-- Recommendation cards show meter ID, estimated cost, approximate distance, applicable rates, and important warnings.
+- Recommendation cards show meter ID, estimated cost, approximate distance, applicable rates, and important warnings. Each card offers a "Directions" link that opens Google Maps driving directions to the meter's block by URL; no API key or service call is involved.
 - If no supported legal option is found, explain whether the cause was no nearby records, legal conflicts, or unsupported data.
 - Always display: `Posted signs take precedence.`
 - Coverage: recommendations work for all City of Vancouver meters (not other Metro Vancouver cities). The map opens centered on Downtown, and the demo runs Downtown.
