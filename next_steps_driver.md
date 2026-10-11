@@ -42,7 +42,8 @@ YB 出問題時：`git diff main` 比對差異；`git restore --source=main <檔
 
 - [x] 整合與部署負責人：你（Anahid 可能一起）。你建立 Streamlit app 骨架，並維護 `app.py` 與 `requirements.txt`。
 - [x] 共用資料格式：照 handoff §6.1、§9.1。
-- [x] Demo 情境：市中心、晚上 6:00 抵達。
+- [x] Demo 情境：市中心、2026-10-13（星期二，平日）晚上 6:00 抵達、停留 2 小時。
+- [ ] Demo 目的地：Step 4 完成後，在市中心試幾個地點，挑「最近的停車表不能推薦、附近仍有合法選項」的地點；做 `Load demo example` 前要確定。
 - [x] Python 版本與 `requirements.txt`：見 Step 1。
 - [ ] **等組員回覆**：部署平台（建議 Streamlit Community Cloud）。
 - [ ] **等組員回覆**：Anahid 與 Juwon 的市府視角分工。
@@ -86,8 +87,11 @@ streamlit run app.py
 - [ ] 依 §6.2 標記 `supported` 與 `unsupported_reason`：
   - 非 In Service、非 `Any Vehicle`、有固定費率
   - `time_limit_override` 或 `prohibition_override` 為 Yes
-  - 必要的費率或時限為空值、無法解析
-- [ ] 輸出 `data/meters_clean.csv` 與前處理報告。
+  - 必要的費率或時限（平日與週末）為空值、無法解析
+  - 尖峰或禁停欄位只填了一部分，或有值但無法解析（整組空白＝沒有該項限制，需先核對原始資料）
+  - 座標缺失或無效
+- [ ] 時限欄位：`No Time Limit` 寫成 `-1`，空值代表資料缺失。
+- [ ] 輸出 `data/meters_clean.csv` 與前處理報告 `data/meters_preprocessing_report.json`（兩者都 commit）。
 
 **檢查點**：可評估筆數應接近全市 2,761、市中心 637（§6.3）。差很多就先查原因。
 
@@ -102,8 +106,8 @@ streamlit run app.py
 ## Step 4：排序（handoff §7.3）
 
 - [ ] 用直線距離找出 250 公尺內的停車表。
-- [ ] 排除 unsupported 與不合法，依估算費用、再依距離排序，取前三。
-- [ ] 另外評估「最近的停車表」，以便說明它為什麼不能停。
+- [ ] 只推薦 `supported == True` 且 `legal == True` 的停車表（`legal` 為 `False` 或 `None` 都不推薦），依估算費用、再依距離排序，取前三。
+- [ ] 另外評估「最近的停車表」，以便說明它為什麼不能停（包含 unsupported 或 `legal == None` 的情況）。
 
 ## Step 5：駕駛頁面（handoff §8）
 

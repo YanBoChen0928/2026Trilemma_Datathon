@@ -161,10 +161,10 @@ Use a dated local snapshot for every external dataset used in the demo. Record t
 | `rate_day` | Parsed 9:00 am–6:00 pm hourly rate |
 | `rate_evening` | Parsed 6:00 pm–10:00 pm hourly rate |
 | `flat_rate_raw` | Unmodified source flat-rate text |
-| `limit_day_min` | Parsed weekday daytime limit in minutes; explicit sentinel for no limit |
-| `limit_evening_min` | Parsed weekday evening limit in minutes; explicit sentinel for no limit |
-| `limit_weekend_day_min` | Parsed weekend daytime limit in minutes |
-| `limit_weekend_evening_min` | Parsed weekend evening limit in minutes |
+| `limit_day_min` | Parsed weekday daytime limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_evening_min` | Parsed weekday evening limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_weekend_day_min` | Parsed weekend daytime limit in minutes; `-1` = `No Time Limit`; null = missing data |
+| `limit_weekend_evening_min` | Parsed weekend evening limit in minutes; `-1` = `No Time Limit`; null = missing data |
 | `am_rush_start`, `am_rush_end` | Parsed AM rush interval |
 | `pm_rush_start`, `pm_rush_end` | Parsed PM rush interval |
 | `prohibition_1_days` | Days when the first special restriction applies |
@@ -185,14 +185,16 @@ Do not collapse prohibition days, time, and zone into one unstructured field. Th
 3. For the initial MVP, mark vehicle-specific records as unsupported unless applicability to an ordinary passenger vehicle is explicitly handled.
 4. Parse `$5.00` into `5.00`; do not convert a missing rate to zero.
 5. Parse `30 Min`, `2 Hr`, `3 Hr`, `4 Hr`, and `13 Hr` into minutes.
-6. Represent the literal `No Time Limit` separately from null or unparseable data.
+6. Represent the literal `No Time Limit` as `-1` in the parsed minute columns, separately from null (missing data) and unparseable values. The rules engine must check for `-1` before comparing a stay with a limit.
 7. Preserve and evaluate both prohibition groups.
 8. Do not recommend a record with a flat-rate option until flat-rate semantics are confirmed.
-9. Produce a preprocessing report containing total records, supported records, unsupported records by reason, and parse failures by field.
+9. Write a preprocessing report to `data/meters_preprocessing_report.json` (committed alongside `meters_clean.csv`) containing the snapshot file name, download date, total records, supported records, unsupported records by reason, and parse failures by field.
 10. If `time_limit_override == "Yes"`: `supported = False`, `unsupported_reason = "Time-limit override semantics not verified."`
 11. If `prohibition_override == "Yes"`: `supported = False`, `unsupported_reason = "Prohibition override semantics not verified."`
-12. If a required weekday daytime or evening limit or rate is null, mark the record unsupported.
+12. If any required weekday or weekend daytime/evening limit, or either hourly rate, is null, mark the record unsupported.
 13. Mark any value that cannot be parsed as unsupported; never guess.
+14. Treat each rush-hour interval (start and end) and each prohibition group (days, time, and zone) as a unit. A fully blank unit means no such restriction is listed. A partially filled unit, or a filled unit that cannot be parsed, makes the record unsupported. Verify against the raw snapshot that blank fields mean "no restriction listed" before relying on this rule.
+15. If `lat` or `lon` is missing, non-numeric, or outside the valid latitude/longitude range, mark the record unsupported.
 
 ### 6.3 Current Evaluable Volume (Snapshot)
 
@@ -253,11 +255,11 @@ Use `legal=None` when the data cannot support a verdict. Do not return `legal=Tr
 
 ### 7.3 Ranking
 
-1. Remove unsupported and illegal records from recommendations.
+1. Recommend only records where `supported == True` and `legal == True`. Records with `legal == False` or `legal == None` are never recommended.
 2. Sort legal records by estimated cost ascending.
 3. Break ties by straight-line distance ascending.
 4. Return at most three records.
-5. Separately evaluate the geographically closest record so the UI can explain why it was rejected, if applicable.
+5. Separately evaluate the geographically closest record so the UI can explain why it was rejected, if applicable, including when it is unsupported or `legal == None`.
 
 The UI must label distance as approximate. It must not call straight-line distance a walking-route distance.
 
