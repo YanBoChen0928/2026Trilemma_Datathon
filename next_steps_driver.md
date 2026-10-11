@@ -124,19 +124,7 @@ streamlit run app.py
 
 **檢查點**：本機用 demo 情境完整操作一次。
 
-手動測試清單（`streamlit run app.py` → Driver View）：
-
-1. 按 `Load demo example`：自動填入日期、時間、時數，地圖移到 demo 地點，出現三張推薦卡片和最近停車表的說明。
-2. 點地圖另一個地方：目的地和 250 m 範圍圈跟著移動，結果更新（自動測試測不到，必測）。
-3. 地圖上的 1、2、3 和推薦卡片的編號一致；滑鼠移到圓點上會顯示停車表 ID 和狀態。
-4. 時數改成 4 小時（6 pm–10 pm）：仍在範圍內，結果會改變。
-5. 時數改成 5 小時：出現超出支援範圍的提示。
-6. 抵達時間改成上午 8 點：出現超出支援範圍的提示。
-7. 下午 2 點、停 4 小時：可能出現黃色（不確定規則）。
-8. 「Advanced」輸入經緯度後按 `Use these coordinates`：目的地移到該處。
-9. 目的地點在沒有停車表的地方：出現「No meter records were found within 250 m」。
-10. 展開「All meter records within 250 m」：表格的狀態、原因和地圖顏色一致。
-11. 頁面上方的 `Home` 可以回到首頁，並切換到 City View。
+手動測試：照 `manual_test_checklist.md` 執行並記錄結果。
 
 ## Step 6：整合與部署（依 `CONTRIBUTING.md` §7）
 
