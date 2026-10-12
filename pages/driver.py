@@ -347,6 +347,12 @@ else:
         st.markdown(f"From **{money(cheapest)}** · Nearest recommendation about "
                     f"**{nearest:.0f} m** away")
 
+    # Conflict count: supported records whose stay is definitely not legal
+    n_conflict = sum(1 for c in result.candidates
+                     if c.result.supported and c.result.legal is False)
+    st.caption(f"{n_conflict} of {len(result.candidates)} meter records within "
+               f"{SEARCH_RADIUS_M} m conflict with this stay.")
+
     # Closest meter card
     closest = result.closest
     status = status_of(closest, rec_ids)
