@@ -4,6 +4,26 @@ Vancouver's street parking rules switch by time of day. CurbCheck helps drivers 
 
 Built for the Trilemma × Northeastern Datathon, Vancouver (2026).
 
+**Demo video (60 s):** https://youtu.be/AlxIEvF085s
+
+## What it does
+
+**Driver View** — for someone about to park.
+
+- Choose a destination by tapping the map (or entering coordinates), then set the arrival time and duration.
+- CurbCheck checks every metered record within 250 m against the whole stay: rates, time limits, and rush-hour restrictions that start or end during the stay.
+- It recommends up to three options, ranked by estimated cost and then distance, and explains why the closest meter is or is not recommended.
+- It shows how many nearby meter records conflict with the stay, so changing the arrival time shows how the answer changes.
+- Each recommendation has a Directions link that opens Google Maps to the meter's block (a URL link; no API key or Google service call).
+
+**City View** — for City staff and planners.
+
+- Overlays meter rates (citywide) with ticket counts for Downtown blocks, 2025-01-01 to 2026-06-30.
+- Filter the map by infraction category and inspect any block's ticket breakdown.
+- Three precomputed insights, reviewed against the ticket aggregate, highlight where tickets concentrate (for example, rush-hour tickets on Seymour, Howe, and West Pender).
+
+CurbCheck gives data-based guidance, not a legal guarantee.
+
 ## Run locally
 
 ```bash
@@ -12,6 +32,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+Run the tests with `pytest`.
 
 Posted signs take precedence over CurbCheck's results.
 
