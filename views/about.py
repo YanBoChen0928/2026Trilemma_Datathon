@@ -141,8 +141,8 @@ st.html("""
   restrictions. At our West Hastings demo location, the closest meter at 6:00 pm is still under
   a rush-hour no-stopping restriction until 7:00 pm.</p>
   <p class="cc-about-t" style="margin-top: 0.6rem;">This is not an isolated problem. Among
-  183,188 Downtown tickets issued from January 2025 to June 2026, 59% were for expired meters,
-  while 8,672—or 4.7%—were for rush-hour no stopping.</p></div>
+  196,909 Downtown tickets issued from January 2025 to June 2026, 59% were for expired meters,
+  while 9,327—or 4.7%—were for rush-hour no stopping.</p></div>
   <div class="cc-who"><p class="cc-who-label">Who it's for</p>
   <ul class="cc-about-list">
     <li><strong>Drivers</strong> check a whole stay before they park.</li>

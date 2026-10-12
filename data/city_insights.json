@@ -7,101 +7,101 @@
         "block_key": "1000 W PENDER ST",
         "lat": 49.287198,
         "lon": -123.119857,
-        "total_tickets": 1287,
+        "total_tickets": 1404,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 877,
-        "category_share": 0.68
+        "category_tickets": 946,
+        "category_share": 0.67
       },
       {
         "block_key": "800 HOWE ST",
         "lat": 49.28137,
         "lon": -123.121213,
-        "total_tickets": 2123,
+        "total_tickets": 2307,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 458,
-        "category_share": 0.22
+        "category_tickets": 495,
+        "category_share": 0.21
       },
       {
         "block_key": "1100 W PENDER ST",
         "lat": 49.287871,
         "lon": -123.122063,
-        "total_tickets": 1013,
+        "total_tickets": 1117,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 433,
-        "category_share": 0.43
+        "category_tickets": 465,
+        "category_share": 0.42
       },
       {
         "block_key": "900 HOWE ST",
         "lat": 49.280423,
         "lon": -123.122667,
-        "total_tickets": 1879,
+        "total_tickets": 2032,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 351,
+        "category_tickets": 380,
         "category_share": 0.19
       },
       {
         "block_key": "600 SEYMOUR ST",
         "lat": 49.282115,
         "lon": -123.115963,
-        "total_tickets": 1512,
+        "total_tickets": 1615,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 337,
+        "category_tickets": 363,
         "category_share": 0.22
-      },
-      {
-        "block_key": "500 SEYMOUR ST",
-        "lat": 49.283496,
-        "lon": -123.11464,
-        "total_tickets": 861,
-        "coord_estimated": false,
-        "category": "Rush-hour no stopping",
-        "category_tickets": 318,
-        "category_share": 0.37
       },
       {
         "block_key": "600 THURLOW ST",
         "lat": 49.286004,
         "lon": -123.122907,
-        "total_tickets": 658,
+        "total_tickets": 717,
         "coord_estimated": true,
         "category": "Rush-hour no stopping",
-        "category_tickets": 309,
-        "category_share": 0.47
+        "category_tickets": 341,
+        "category_share": 0.48
+      },
+      {
+        "block_key": "500 SEYMOUR ST",
+        "lat": 49.283496,
+        "lon": -123.11464,
+        "total_tickets": 924,
+        "coord_estimated": false,
+        "category": "Rush-hour no stopping",
+        "category_tickets": 338,
+        "category_share": 0.37
       },
       {
         "block_key": "100 W CORDOVA ST",
         "lat": 49.282972,
         "lon": -123.108165,
-        "total_tickets": 1497,
+        "total_tickets": 1611,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 258,
+        "category_tickets": 276,
         "category_share": 0.17
-      },
-      {
-        "block_key": "700 RICHARDS ST",
-        "lat": 49.280517,
-        "lon": -123.11724,
-        "total_tickets": 2080,
-        "coord_estimated": false,
-        "category": "Rush-hour no stopping",
-        "category_tickets": 245,
-        "category_share": 0.12
       },
       {
         "block_key": "1200 SEYMOUR ST",
         "lat": 49.275947,
         "lon": -123.126043,
-        "total_tickets": 725,
+        "total_tickets": 816,
         "coord_estimated": false,
         "category": "Rush-hour no stopping",
-        "category_tickets": 243,
-        "category_share": 0.34
+        "category_tickets": 265,
+        "category_share": 0.32
+      },
+      {
+        "block_key": "700 RICHARDS ST",
+        "lat": 49.280517,
+        "lon": -123.11724,
+        "total_tickets": 2226,
+        "coord_estimated": false,
+        "category": "Rush-hour no stopping",
+        "category_tickets": 255,
+        "category_share": 0.11
       }
     ]
   },
@@ -113,61 +113,61 @@
         "block_key": "400 HELMCKEN ST",
         "lat": 49.276817,
         "lon": -123.122211,
-        "total_tickets": 606,
+        "total_tickets": 640,
         "coord_estimated": false,
         "category": "Meter expired",
-        "category_tickets": 586,
-        "category_share": 0.97
+        "category_tickets": 615,
+        "category_share": 0.96
       },
       {
         "block_key": "500 NICOLA ST",
         "lat": 49.29105,
         "lon": -123.128192,
-        "total_tickets": 558,
+        "total_tickets": 593,
         "coord_estimated": false,
         "category": "Meter expired",
-        "category_tickets": 538,
-        "category_share": 0.96
+        "category_tickets": 573,
+        "category_share": 0.97
       },
       {
         "block_key": "1400 W HASTINGS ST",
         "lat": 49.290132,
         "lon": -123.127923,
-        "total_tickets": 586,
+        "total_tickets": 634,
         "coord_estimated": false,
         "category": "Meter expired",
-        "category_tickets": 563,
+        "category_tickets": 610,
         "category_share": 0.96
       },
       {
         "block_key": "100 KEEFER PLACE",
         "lat": 49.279848,
         "lon": -123.108657,
-        "total_tickets": 511,
+        "total_tickets": 568,
         "coord_estimated": false,
         "category": "Posted sign restriction",
-        "category_tickets": 461,
+        "category_tickets": 512,
         "category_share": 0.9
       },
       {
         "block_key": "600 ABBOTT ST",
         "lat": 49.278704,
         "lon": -123.106873,
-        "total_tickets": 1226,
+        "total_tickets": 1324,
         "coord_estimated": false,
         "category": "Posted sign restriction",
-        "category_tickets": 638,
-        "category_share": 0.52
+        "category_tickets": 678,
+        "category_share": 0.51
       },
       {
         "block_key": "400 BEACH CRESCENT",
         "lat": 49.272492,
         "lon": -123.128131,
-        "total_tickets": 474,
+        "total_tickets": 523,
         "coord_estimated": false,
         "category": "Overstayed limit",
-        "category_tickets": 399,
-        "category_share": 0.84
+        "category_tickets": 446,
+        "category_share": 0.85
       }
     ]
   },
@@ -179,70 +179,70 @@
         "block_key": "900 CANADA PLACE",
         "lat": 49.287975,
         "lon": -123.112527,
-        "total_tickets": 9059,
+        "total_tickets": 9470,
         "coord_estimated": false
       },
       {
         "block_key": "800 HOMER ST",
         "lat": 49.278978,
         "lon": -123.117785,
-        "total_tickets": 4924,
+        "total_tickets": 5317,
         "coord_estimated": false
       },
       {
         "block_key": "900 HOMER ST",
         "lat": 49.277763,
         "lon": -123.119191,
-        "total_tickets": 3137,
+        "total_tickets": 3360,
         "coord_estimated": false
       },
       {
         "block_key": "600 HOMER ST",
         "lat": 49.280848,
         "lon": -123.113836,
-        "total_tickets": 3037,
+        "total_tickets": 3272,
         "coord_estimated": false
       },
       {
         "block_key": "400 ROBSON ST",
         "lat": 49.279794,
         "lon": -123.117561,
-        "total_tickets": 3031,
+        "total_tickets": 3255,
         "coord_estimated": false
       },
       {
         "block_key": "800 RICHARDS ST",
         "lat": 49.27977,
         "lon": -123.118562,
-        "total_tickets": 2963,
+        "total_tickets": 3179,
         "coord_estimated": false
       },
       {
         "block_key": "1100 HOMER ST",
         "lat": 49.275659,
         "lon": -123.122374,
-        "total_tickets": 2414,
+        "total_tickets": 2554,
         "coord_estimated": false
       },
       {
         "block_key": "900 MAINLAND ST",
         "lat": 49.277253,
         "lon": -123.118124,
-        "total_tickets": 2375,
-        "coord_estimated": false
-      },
-      {
-        "block_key": "1000 HOMER ST",
-        "lat": 49.27674,
-        "lon": -123.120832,
-        "total_tickets": 2333,
+        "total_tickets": 2505,
         "coord_estimated": false
       },
       {
         "block_key": "1000 W CORDOVA ST",
         "lat": 49.28816,
         "lon": -123.117185,
-        "total_tickets": 2303,
+        "total_tickets": 2499,
+        "coord_estimated": false
+      },
+      {
+        "block_key": "1000 HOMER ST",
+        "lat": 49.27674,
+        "lon": -123.120832,
+        "total_tickets": 2499,
         "coord_estimated": false
       }
     ]

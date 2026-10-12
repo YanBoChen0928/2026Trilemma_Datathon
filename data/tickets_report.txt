@@ -2,52 +2,53 @@ loaded parking-tickets-2020-2025.csv: 2,472,917 rows
 loaded parking-tickets_2026.csv: 237,792 rows
 [3] combined 2,710,709 rows; within 2025-01-01..2026-06-30: 690,116
 [1] status == 'IS': kept 578,439, dropped 111,677
-[2] de-duplicated on bi_id: removed 40,642 duplicates; 537,797 remain
-[4] water tickets removed: 1,317 (bylaw 12086: 1,317)
-    tickets after water filter: 536,480
+[2] de-duplicated on (year, bi_id): removed 0 duplicates; 578,439 remain
+    bi_id values reused across years and retained: 40,642
+[4] water tickets removed: 1,373 (bylaw 12086: 1,373)
+    tickets after water filter: 577,066
 [7] property addresses: 99,743 rows, 98,545 usable (civic number + coordinates)
     block_coords: 9,694 blocks
-    estimated coordinates for 756 of 1,256 blocks without addresses (neighbouring blocks on the same street, within 200); covers 32,273 tickets
-[8] join: matched 528,043 / 536,480 (98.4%); unmatched 8,437
+    estimated coordinates for 775 of 1,282 blocks without addresses (neighbouring blocks on the same street, within 200); covers 34,659 tickets
+[8] join: matched 567,989 / 577,066 (98.4%); unmatched 9,077
     top unmatched block_keys:
 block_key
-1500 COAL HARBOUR QUAY          469
-1000 EVELEIGH ST                376
-400 NATIONAL AV                 345
-8500 RIVER DISTRICT CROSSING    234
-1000 SEE-EM-IA LANE             229
-1000 EIHU LANE                  222
-3400 E KENT AVE S               183
-3400 W SAWMILL CRESCENT         183
-2100 LAHB AV                    169
-0 E 29TH AV                     149
-1500 CAROLINA ST                139
-1100 THORNTON ST                126
-1700 SEE-EM-IA LANE             125
-3600 E SAWMILL CRESCENT         115
-3500 E SAWMILL CRESCENT         115
-    Downtown (local_area == 'Downtown'): 183,188 of 528,043 matched tickets
-    wrote data\tickets_block_agg.csv: 11,568 rows, 183,188 tickets (reconciles with source)
+1500 COAL HARBOUR QUAY          491
+1000 EVELEIGH ST                401
+400 NATIONAL AV                 374
+1000 EIHU LANE                  256
+1000 SEE-EM-IA LANE             256
+8500 RIVER DISTRICT CROSSING    242
+3400 E KENT AVE S               224
+3400 W SAWMILL CRESCENT         193
+2100 LAHB AV                    187
+0 E 29TH AV                     164
+1500 CAROLINA ST                141
+1100 THORNTON ST                140
+1100 EIHU LANE                  138
+1700 SEE-EM-IA LANE             133
+3500 E SAWMILL CRESCENT         124
+    Downtown (local_area == 'Downtown'): 196,909 of 567,989 matched tickets
+    wrote data\tickets_block_agg.csv: 11,827 rows, 196,909 tickets (reconciles with source)
 
 category totals:
 category
-Meter expired              108591
-Other                       33157
-Posted sign restriction     22520
-Rush-hour no stopping        8672
-Loading zone                 7308
-Overstayed limit             2503
-Fire hydrant                  437
+Meter expired              116984
+Other                       35295
+Posted sign restriction     24164
+Rush-hour no stopping        9327
+Loading zone                 7921
+Overstayed limit             2742
+Fire hydrant                  476
 
 top 10 blocks (manual plausibility check):
 block_key
-900 CANADA PLACE     9059
-800 HOMER ST         4924
-900 HOMER ST         3137
-600 HOMER ST         3037
-400 ROBSON ST        3031
-800 RICHARDS ST      2963
-1100 HOMER ST        2414
-900 MAINLAND ST      2375
-1000 HOMER ST        2333
-1000 W CORDOVA ST    2303
+900 CANADA PLACE     9470
+800 HOMER ST         5317
+900 HOMER ST         3360
+600 HOMER ST         3272
+400 ROBSON ST        3255
+800 RICHARDS ST      3179
+1100 HOMER ST        2554
+900 MAINLAND ST      2505
+1000 W CORDOVA ST    2499
+1000 HOMER ST        2499

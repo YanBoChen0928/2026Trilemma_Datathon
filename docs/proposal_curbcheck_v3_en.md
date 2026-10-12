@@ -85,7 +85,7 @@ Known data limitations (combining Anahid's notes and our own checks):
 - Given an arrival time and duration, check for rush-hour or prohibition overlaps and per-window time limits, and total the cost window by window (free from 10 pm to 9 am).
 
 **Ticket processing** (following Anahid's plan)
-- Keep issued tickets only (exclude voids and warnings by Status), de-duplicate by `BI_ID`, and filter out water tickets.
+- Keep issued tickets only (exclude voids and warnings by Status), de-duplicate by `(year, BI_ID)` because IDs are reused across years, and filter out water tickets.
 - Use January 2025 – June 2026 data to reduce mismatch with current rules.
 - Group by bylaw section and keywords: meter expired, overstayed limit, rush-hour no stopping, loading zone, fire hydrant, residential permit zone, and so on.
 

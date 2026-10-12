@@ -132,7 +132,7 @@ def estimate_missing_blocks(coords: pd.DataFrame, missing_keys: set) -> pd.DataF
     coords["_block"] = coords["block_key"].str.split(" ", n=1).str[0].astype(int)
     by_street = {k: g for k, g in coords.groupby("_street")}
     rows = []
-    for key in missing_keys:
+    for key in sorted(missing_keys):
         num, _, street = key.partition(" ")
         if not num.isdigit() or street not in by_street:
             continue
@@ -162,6 +162,34 @@ def load_tickets() -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
+def deduplicate_tickets(tickets: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Keep one row per ticket ID within each year.
+
+    BI_ID values are reused across the 2025 and 2026 source datasets, so BI_ID
+    alone is not a unique key for the combined date range.
+    """
+    keys = ["year", "bi_id"]
+    if tickets[keys].isna().any().any() or tickets[keys].eq("").any().any():
+        raise ValueError("Ticket year and bi_id must be present for de-duplication")
+
+    repeated = tickets[tickets.duplicated(subset=keys, keep=False)]
+    compared_columns = [
+        column for column in tickets.columns
+        if column not in keys and column != "source_file"
+    ]
+    if not repeated.empty and (
+        repeated.groupby(keys, dropna=False)[compared_columns]
+        .nunique(dropna=False)
+        .gt(1)
+        .any()
+        .any()
+    ):
+        raise ValueError("Conflicting ticket records share the same (year, bi_id)")
+
+    deduplicated = tickets.drop_duplicates(subset=keys, keep="first").copy()
+    return deduplicated, len(tickets) - len(deduplicated)
+
+
 def main() -> None:
     # ---- Step 3 (first half): combine + date window
     t = load_tickets()
@@ -174,11 +202,13 @@ def main() -> None:
     t = t[t["status"] == ISSUED_STATUS].copy()
     log(f"[1] status == '{ISSUED_STATUS}': kept {len(t):,}, dropped {n - len(t):,}")
 
-    # ---- Step 2: de-duplicate on bi_id
-    n = len(t)
-    t = t.drop_duplicates(subset="bi_id", keep="first").copy()
-    log(f"[2] de-duplicated on bi_id: removed {n - len(t):,} duplicates; {len(t):,} remain")
-    assert t["bi_id"].is_unique
+    # ---- Step 2: BI_ID values can repeat across years; use the composite key.
+    cross_year_ids = int(t.groupby("bi_id")["year"].nunique().gt(1).sum())
+    t, duplicates_removed = deduplicate_tickets(t)
+    log(f"[2] de-duplicated on (year, bi_id): removed {duplicates_removed:,} "
+        f"duplicates; {len(t):,} remain")
+    log(f"    bi_id values reused across years and retained: {cross_year_ids:,}")
+    assert not t.duplicated(subset=["year", "bi_id"]).any()
 
     # ---- Step 4: remove water tickets (Water Conservation By-law 12086)
     water = (t["bylaw"] == WATER_BYLAW) | t["infractiontext"].str.contains(

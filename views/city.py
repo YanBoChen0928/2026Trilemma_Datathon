@@ -279,6 +279,6 @@ st.caption(
     "Ticket volume shows enforcement activity, not parking demand or the chance of a ticket. "
     "Meter rate is a demand proxy, not real-time occupancy. Ticket locations are approximate "
     "at the 100-block level, and tickets have a date but no time of day. VPD-issued tickets "
-    "are not included. 98.4% of tickets were matched to a block (8,437 unmatched tickets are "
-    "not mapped); 32,273 matched tickets citywide sit on blocks with estimated coordinates."
+    "are not included. 98.4% of tickets were matched to a block (9,077 unmatched tickets are "
+    "not mapped); 34,659 matched tickets citywide sit on blocks with estimated coordinates."
 )

@@ -82,7 +82,7 @@ th{font-weight:800;background:var(--panel)}
 <p><strong>Shared core: time-window rules engine</strong></p>
 <ul><li>Turn text like <code>$5.00</code>, <code>2 Hr</code>, and <code>3:00pm to 6:00pm</code> into computable values.</li><li>Given an arrival time and duration, check for rush-hour or prohibition overlaps and per-window time limits, and total the cost window by window (free from 10 pm to 9 am).</li></ul>
 <p><strong>Ticket processing</strong> (following Anahid's plan)</p>
-<ul><li>Keep issued tickets only (exclude voids and warnings by Status), de-duplicate by <code>BI_ID</code>, and filter out water tickets.</li><li>Use January 2025 – June 2026 data to reduce mismatch with current rules.</li><li>Group by bylaw section and keywords: meter expired, overstayed limit, rush-hour no stopping, loading zone, fire hydrant, residential permit zone, and so on.</li></ul>
+<ul><li>Keep issued tickets only (exclude voids and warnings by Status), de-duplicate by <code>(year, BI_ID)</code> because IDs are reused across years, and filter out water tickets.</li><li>Use January 2025 – June 2026 data to reduce mismatch with current rules.</li><li>Group by bylaw section and keywords: meter expired, overstayed limit, rush-hour no stopping, loading zone, fire hydrant, residential permit zone, and so on.</li></ul>
 <p><strong>Geocoding</strong></p>
 <ul><li>Group the address data by "civic number rounded down to the hundred + street" and average the coordinates to get block locations, then join to tickets. No external geocoding service needed.</li></ul>
 <p><strong>Metric principles</strong></p>
