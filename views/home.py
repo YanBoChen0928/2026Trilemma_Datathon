@@ -21,7 +21,7 @@ HERO = """
 .cc-slogan {color: #AEB6BE; font-size: clamp(1.1rem, 2.6vw, 1.6rem); line-height: 1.3;
             margin: 0.4rem 0 0;}
 .cc-lede {color: #C9CED3; font-size: clamp(0.95rem, 1.7vw, 1.05rem); line-height: 1.6;
-          margin: 0.9rem 0 0; max-width: 42rem;}
+          margin: 0.9rem 0 0; text-wrap: pretty;}
 .cc-lane {height: 6px; margin: clamp(1.25rem, 3vw, 2rem) 0 clamp(1rem, 2.5vw, 1.75rem);
           background: repeating-linear-gradient(90deg, #454C54 0 56px, transparent 56px 112px);}
 .cc-curb {background: #C9CED3; padding: 10px clamp(1rem, 5vw, 3rem) 0;}
