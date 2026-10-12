@@ -313,7 +313,7 @@ A stay within a single window is evaluated normally, since A and B give the same
 ### 9.2 Ticket Processing Steps
 
 1. Keep records with `status == "IS"` unless the team confirms another issued-ticket definition.
-2. De-duplicate by `bi_id` and report how many duplicates were removed.
+2. De-duplicate by `(year, bi_id)` and report how many duplicates were removed. `bi_id` values are reused across the 2025 and 2026 source datasets; do not de-duplicate across years on `bi_id` alone.
 3. Combine 2025 records from `parking-tickets-2020-2025` with 2026 records from `parking-tickets`, filter to 2025-01-01 – 2026-06-30, and apply the same cleaning, categorization, and geocoding to both.
 4. Remove water tickets using the owner's rule, recorded in the README.
 5. Normalize ticket street names and property-address street names with the same function.
@@ -419,7 +419,7 @@ Timeline tests, required before the Day 2 restriction (Section 3.2) is removed:
 
 The City pipeline must verify:
 
-1. `bi_id` is unique after de-duplication.
+1. `(year, bi_id)` is unique after de-duplication; a `bi_id` may occur in more than one year.
 2. Water-ticket filtering removes only the intended records.
 3. The coordinate join reports matched and unmatched counts.
 4. Aggregated counts reconcile with included source records.

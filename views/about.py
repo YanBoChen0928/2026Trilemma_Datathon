@@ -25,9 +25,10 @@ TEAM = [
         "photo": "team_anahid.jpg",
         "qr": "qr_anahid.png",
         "linkedin": "https://www.linkedin.com/in/anahid-raisrohani-8aa62182/",
-        "bio": "Built the ticket data pipeline: cleaning, de-duplication, block matching, and "
-               "infraction categories. Wrote the data-quality report and the first draft of the "
-               "City View insights.",
+        "bio": "Built a preprocessing pipeline to clean and combine City parking-ticket and "
+               "property-address datasets, match tickets to 100-block coordinates, and "
+               "categorize infractions. Created the data-quality report and scripts for "
+               "generating City View insights.",
     },
     {
         "name": "Juwon Park",
@@ -141,8 +142,8 @@ st.html("""
   restrictions. At our West Hastings demo location, the closest meter at 6:00 pm is still under
   a rush-hour no-stopping restriction until 7:00 pm.</p>
   <p class="cc-about-t" style="margin-top: 0.6rem;">This is not an isolated problem. Among
-  183,188 Downtown tickets issued from January 2025 to June 2026, 59% were for expired meters,
-  while 8,672—or 4.7%—were for rush-hour no stopping.</p></div>
+  196,909 Downtown tickets issued from January 2025 to June 2026, 59% were for expired meters,
+  while 9,327—or 4.7%—were for rush-hour no stopping.</p></div>
   <div class="cc-who"><p class="cc-who-label">Who it's for</p>
   <ul class="cc-about-list">
     <li><strong>Drivers</strong> check a whole stay before they park.</li>

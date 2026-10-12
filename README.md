@@ -196,19 +196,19 @@ These results come from the 2026-10-11 snapshot. A later snapshot may change the
 | Step | Rule | Result |
 | --- | --- | --- |
 | Issued tickets | `status == "IS"` | 578,439 kept |
-| De-duplication | One row per `bi_id` | 40,642 duplicates removed |
-| Water tickets | Removed when `bylaw == 12086` (Water Conservation By-law, the only water bylaw in the data) or the text contains "WATER"/"WATERING". Both tests removed the same rows. | 1,317 removed |
+| De-duplication | One row per `(year, bi_id)`; `bi_id` is reused across 2025 and 2026, so IDs are not unique across source years | 0 repeated year-qualified IDs; all 40,642 cross-year ID collisions retained |
+| Water tickets | Removed when `bylaw == 12086` (Water Conservation By-law, the only water bylaw in the data) or the text contains "WATER"/"WATERING" | 1,373 removed |
 | Street names | One normalizer for tickets and addresses (uppercase, punctuation stripped, AVE→AV, BLVD→BOULEVARD, RD→ROAD, DR→DRIVE, HWY→HIGHWAY, leading WEST/EAST/NORTH/SOUTH→W/E/N/S) | |
 | Block | Civic number rounded down to the hundred + normalized street = `block_key`; coordinates are the mean of the addresses in that block | 9,694 blocks |
-| Downtown | `local_area == "Downtown"`, taken from the property-address `Geo Local Area` after the join | 183,188 tickets |
+| Downtown | `local_area == "Downtown"`, taken from the property-address `Geo Local Area` after the join | 196,909 tickets |
 | Categories | Explicit bylaw/section mapping first, keyword rules second: Meter expired, Overstayed limit, Rush-hour no stopping, Loading zone, Fire hydrant, Posted sign restriction, Residential permit zone, Other | See below |
 
-**Estimated block coordinates.** The property-address data is incomplete: 1,256 ticket blocks have no address, including busy Downtown blocks such as 700 Nelson St and 400 Hamilton St. For 756 of them we estimate the location as the mean of known blocks on the same street within ±100 (or ±200 if none are that close). Those rows carry `coord_estimated = True` and cover 32,273 tickets, so their map positions are approximate. Blocks with no neighbour within 200 stay unmatched.
+**Estimated block coordinates.** The property-address data is incomplete: 1,282 ticket blocks have no address, including busy Downtown blocks such as 700 Nelson St and 400 Hamilton St. For 775 of them we estimate the location as the mean of known blocks on the same street within ±100 (or ±200 if none are that close). Those rows carry `coord_estimated = True` and cover 34,659 tickets, so their map positions are approximate. Blocks with no neighbour within 200 stay unmatched.
 
 **Data quality**
 
-- Matched to a block coordinate: 528,043 of 536,480 tickets (98.4%). Unmatched: 8,437 tickets, mostly in newer areas (e.g. Coal Harbour Quay, River District, Sawmill Crescent). They are excluded from the map and counted here.
-- Of the matched tickets, 183,188 fall in Downtown and are in the aggregate; the aggregate reconciles with those source rows.
+- Matched to a block coordinate: 567,989 of 577,066 tickets (98.4%). Unmatched: 9,077 tickets, mostly in newer areas (e.g. Coal Harbour Quay, River District, Sawmill Crescent). They are excluded from the map and counted here.
+- Of the matched tickets, 196,909 fall in Downtown and are in the aggregate; the aggregate reconciles with those source rows.
 - "Residential permit zone" has no matching tickets in this data and appears with a count of zero (or not at all).
 - Tickets have a date but no time of day, and locations are only to the 100-block.
 - The data excludes VPD-issued tickets. Ticket counts show where enforcement happened, not parking demand.
@@ -278,31 +278,6 @@ Suggested behaviour:
 - Show the best recommendation or no-result state in a bottom sheet.
 - Keep key controls large enough for touch interaction.
 
-### Possible future architecture
-
-A formal React application is feasible, but should be a progressive migration rather than a rewrite of the parking logic.
-
-```text
-React / Next.js frontend
-        |
-        | JSON over HTTPS
-        v
-Python FastAPI backend
-        |
-        +-- existing curbcheck.rules
-        +-- existing curbcheck.ranking
-        +-- cleaned meter data and data-version metadata
-```
-
-Suggested responsibilities:
-
-| Layer | Responsibility |
-| --- | --- |
-| React / Next.js | Responsive layout, form state, map interactions, result presentation, accessibility, and API requests |
-| Python / FastAPI | Input validation, rule evaluation, cost calculation, ranking, structured reasons, and data-version reporting |
-| Data pipeline | Download, validate, preprocess, and version the City of Vancouver datasets |
-
-The frontend should not reproduce legal or parking calculations. Keeping those rules in Python prevents the Streamlit and React versions from producing different answers.
 
 ## License
 
@@ -319,4 +294,3 @@ This project includes data and map sources as noted above. The project code is p
 - [docs/](docs/)
 
 ---
-

@@ -25,7 +25,7 @@ Metric principle: ticket counts show **where enforcement happened**, not parking
 
 | Component | Description |
 | --- | --- |
-| Ticket cleaning | Keep issued tickets only (by `status`), de-duplicate by `bi_id`, filter out water tickets, limit to downtown and January 2025 – June 2026 |
+| Ticket cleaning | Keep issued tickets only (by `status`), de-duplicate by `(year, bi_id)` because `bi_id` is reused across years, filter out water tickets, limit to downtown and January 2025 – June 2026 |
 | Infraction categories | Group by `bylaw`, `section`, and `infractiontext` keywords into: meter expired, overstayed limit, rush-hour no stopping, loading zone, fire hydrant, residential permit zone, other |
 | Block coordinates | Group the address data by "civic number rounded down to the hundred + street," average the coordinates, output `block_coords`, then join to tickets on `block` + `street` |
 | 311 processing | Filter `service_request_type` to Parking Enforcement Request Case; aggregate by hour and weekday |
