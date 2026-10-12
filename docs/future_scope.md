@@ -62,6 +62,18 @@ Recommended mobile behaviour:
 
 Accessibility should include keyboard navigation, visible focus states, adequate contrast, screen-reader labels, scalable text, and status indicators that do not depend only on colour.
 
+### 3.4 Destination search
+
+The Driver View already has a **block search**: drivers can type part of a street name and pick one of the 10,450 Vancouver 100-blocks in `data/block_coords.csv`. It works offline and needs no external service.
+
+Searching for **any full street address** (for example, a house number that is not a block centre) would need geocoding:
+
+- An external geocoding service, which adds a network dependency, usage limits, and possibly cost.
+- Address matching and ambiguity handling, such as misspellings, unit numbers, and addresses outside Vancouver.
+- Privacy review, because typed addresses would be sent to a third party.
+
+Estimated effort: about 4–6 hours on top of the block search. Treat it as a post-datathon improvement, after the responsive design work, and keep the block search as the offline fallback.
+
 ## 4. Is a Formal React Application Possible?
 
 Yes. A formal React frontend is feasible, but it should be a progressive migration rather than a rewrite of the parking logic.
@@ -172,7 +184,7 @@ A database, accounts, microservices, or real-time infrastructure are not prerequ
 | Priority | Work |
 | --- | --- |
 | P1 after the demo | Mobile reading order, map/list toggle, marker filtering or clustering, compact conflict summary, accessibility pass |
-| P2 | FastAPI wrapper and stable API contract around the existing Python logic |
+| P2 | FastAPI wrapper and stable API contract around the existing Python logic; full-address search through geocoding (Section 3.4) |
 | P3 | React/Next.js Driver View proof of concept |
 | P4 | React City View, scheduled data refresh, and production monitoring |
 | Later only if justified | PostGIS, user accounts, saved trips, notifications, or native mobile apps |

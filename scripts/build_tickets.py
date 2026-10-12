@@ -1,6 +1,6 @@
 """Build data/tickets_block_agg.csv (City View ticket aggregate).
 
-Spec: mvp_implementation_handoff_en.md, Section 9.
+Spec: docs/mvp_implementation_handoff_en.md, Section 9.
 Run from the repo root:  python scripts/build_tickets.py
 
 Raw inputs (data/raw/, semicolon-delimited, UTF-8 BOM):

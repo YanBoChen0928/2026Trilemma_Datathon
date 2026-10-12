@@ -1,7 +1,7 @@
 """City View — owners: Anahid, Juwon.
 
 Meter-rate layer, ticket concentration, and infraction breakdown (Downtown).
-Spec: mvp_implementation_handoff_en.md, Sections 9–10.
+Spec: docs/mvp_implementation_handoff_en.md, Sections 9–10.
 """
 import json
 import math

@@ -1,7 +1,7 @@
 """Driver View — owner: Yan-Bo.
 
 Find street parking that is legal for the whole stay and estimate its cost.
-Spec: mvp_implementation_handoff_en.md, Sections 6–8.
+Spec: docs/mvp_implementation_handoff_en.md, Sections 6–8.
 """
 import json
 import math
@@ -11,6 +11,7 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 import folium
+import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
@@ -19,12 +20,14 @@ from curbcheck.rules import NO_TIME_LIMIT, SAME_DAY_WINDOW_ONLY
 
 st.set_page_config(page_title="CurbCheck — Driver View", page_icon="🚗", layout="wide")
 
+DATA = Path(__file__).resolve().parent.parent / "data"
 DOWNTOWN = (49.2820, -123.1180)
 DEMO = {  # 400 W Hastings St, Tuesday 6:00 pm, 2 hours (README, "Demo scenario")
     "dest": (49.28370197906036, -123.11137913860121),
     "date": date(2026, 10, 13),
     "time": time(18, 0),
     "duration": "2 hr",
+    "block": "400 W HASTINGS ST",
 }
 DURATIONS = {"30 min": 30, "1 hr": 60, "2 hr": 120, "3 hr": 180, "Custom": None}
 SCOPE_TEXT = ("Same-day stays between 9:00 am and 10:00 pm." if SAME_DAY_WINDOW_ONLY
@@ -49,6 +52,21 @@ def meters():
     return load_meters()
 
 
+@st.cache_resource
+def blocks():
+    """100-block centres from data/block_coords.csv, keyed by block, ordered by street then number.
+
+    Read-only, so cache_resource: cache_data would copy the whole table on every call.
+    """
+    df = pd.read_csv(DATA / "block_coords.csv")
+    df["street"] = df["block_key"].str.split(n=1).str[1]
+    df["number"] = df["block_key"].str.split(n=1).str[0].astype(int)
+    df = df.sort_values(["street", "number"])
+    return {r.block_key: (float(r.lat), float(r.lon), r.local_area, bool(r.coord_estimated),
+                          f"{r.block_key.title()} · {r.local_area}")
+            for r in df.itertuples()}
+
+
 # --- Session state ----------------------------------------------------------------
 
 state = st.session_state
@@ -61,6 +79,7 @@ state.setdefault("custom_hours", 2.0)
 state.setdefault("adv_lat", DOWNTOWN[0])
 state.setdefault("adv_lon", DOWNTOWN[1])
 state.setdefault("show_all", False)
+state.setdefault("dest_block", None)
 
 
 def load_demo():
@@ -69,10 +88,20 @@ def load_demo():
     state.arrival_time = DEMO["time"]
     state.duration_choice = DEMO["duration"]
     state.adv_lat, state.adv_lon = DEMO["dest"]
+    state.dest_block = DEMO["block"]
+
+
+def use_block():
+    """Set the destination from the block search. Clearing the search keeps the destination."""
+    if state.dest_block:
+        lat, lon = blocks()[state.dest_block][:2]
+        state.dest = (lat, lon)
+        state.adv_lat, state.adv_lon = lat, lon
 
 
 def use_coordinates():
     state.dest = (state.adv_lat, state.adv_lon)
+    state.dest_block = None  # the pin is no longer a block centre
 
 
 def handle_map_click():
@@ -81,6 +110,7 @@ def handle_map_click():
     if click and click != state.last_click:
         state.last_click = click
         state.dest = (click["lat"], click["lng"])
+        state.dest_block = None  # a map click replaces the searched block
 
 
 # --- Helpers ----------------------------------------------------------------------
@@ -174,6 +204,8 @@ def status_of(candidate, recommended_ids):
 
 # --- Header and inputs ------------------------------------------------------------
 
+BLOCKS = blocks()
+
 st.title("Driver View")
 st.caption("Find metered street parking that appears legal for your whole stay.")
 with st.expander("Demo tools"):
@@ -183,9 +215,15 @@ left, right = st.columns([2, 3], gap="large")
 
 with left:
     st.subheader("Your stay")
-    st.caption(f"Tap the map, or use Advanced: enter coordinates, to check metered parking "
-               f"within {SEARCH_RADIUS_M} m of your destination. Then set your arrival time "
-               "and duration.")
+    st.caption(f"Search a block, tap the map, or use Advanced: enter coordinates, to check "
+               f"metered parking within {SEARCH_RADIUS_M} m of your destination. Then set your "
+               "arrival time and duration.")
+    st.selectbox("Search a Vancouver block", list(BLOCKS), key="dest_block", index=None,
+                 format_func=lambda key: BLOCKS[key][4], on_change=use_block,
+                 placeholder="Type a street, e.g. 400 W Hastings")
+    if state.dest_block and BLOCKS[state.dest_block][3]:
+        st.caption("This block's location is estimated from neighbouring blocks on the same "
+                   "street.")
     if state.dest:
         st.markdown(":green[**✓ Destination selected**]")
     else:
@@ -328,7 +366,8 @@ st.divider()
 st.subheader("Results")
 
 if not state.dest:
-    st.write("Tap the map to choose a destination, or open Demo tools to load the example.")
+    st.write("Search a block or tap the map to choose a destination, or open Demo tools to "
+             "load the example.")
 elif result.scope_reason:
     st.warning(result.scope_reason)
 elif not result.candidates:
@@ -450,8 +489,7 @@ st.info("Posted signs take precedence.")
 
 # --- Data period and limitations ---------------------------------------------------
 
-meter_report = json.loads((Path(__file__).resolve().parent.parent / "data"
-                           / "meters_preprocessing_report.json").read_text(encoding="utf-8"))
+meter_report = json.loads((DATA / "meters_preprocessing_report.json").read_text(encoding="utf-8"))
 st.divider()
 st.markdown("**Data period and limitations**")
 st.caption(

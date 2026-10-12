@@ -2,7 +2,9 @@
 
 Vancouver's street parking rules switch by time of day. CurbCheck helps drivers check whether a whole stay is legal and what it will cost, and shows the City where its rules trip people up.
 
-Built for the Trilemma × Northeastern Datathon, Vancouver (2026).
+Built for the Trilemma × Northeastern Datathon, Vancouver (2026) by Anahid Raisrohani, Juwon Park, and Yan-Bo Chen.
+
+**Live app:** https://curbcheck.streamlit.app
 
 **Demo video (60 s):** https://youtu.be/AlxIEvF085s
 
@@ -10,7 +12,7 @@ Built for the Trilemma × Northeastern Datathon, Vancouver (2026).
 
 **Driver View** — for someone about to park.
 
-- Choose a destination by tapping the map (or entering coordinates), then set the arrival time and duration.
+- Choose a destination by searching for a Vancouver block (type part of a street name, for example "400 W Hastings"), tapping the map, or entering coordinates. Then set the arrival time and duration.
 - CurbCheck checks every metered record within 250 m against the whole stay: rates, time limits, and rush-hour restrictions that start or end during the stay.
 - It recommends up to three options, ranked by estimated cost and then distance, and explains why the closest meter is or is not recommended.
 - It shows how many nearby meter records conflict with the stay, so changing the arrival time shows how the answer changes.
@@ -21,6 +23,8 @@ Built for the Trilemma × Northeastern Datathon, Vancouver (2026).
 - Overlays meter rates (citywide) with ticket counts for Downtown blocks, 2025-01-01 to 2026-06-30.
 - Filter the map by infraction category and inspect any block's ticket breakdown.
 - Three precomputed insights, reviewed against the ticket aggregate, highlight where tickets concentrate (for example, rush-hour tickets on Seymour, Howe, and West Pender).
+
+The app also has a **Home** page with the 60-second demo and an **About** page with the problem, the team, the organizers, and the data sources.
 
 CurbCheck gives data-based guidance, not a legal guarantee.
 
@@ -34,6 +38,22 @@ streamlit run app.py
 ```
 
 Run the tests with `pytest`.
+
+## Project structure
+
+```text
+app.py              Entry point: top navigation and the shared footer
+views/              Pages: home.py, driver.py, city.py, about.py
+curbcheck/          Meter preprocessing, rules engine, and ranking
+scripts/            Ticket data pipeline (build_tickets.py)
+data/               Processed data the app reads (raw snapshots stay local)
+assets/             Logo, favicon, team photos, and QR codes
+.streamlit/         Theme
+docs/               Planning, design, and team process documents
+tests/              pytest tests
+```
+
+Pages live in `views/` rather than `pages/`, because Streamlit treats a `pages/` folder as its own automatic navigation.
 
 Posted signs take precedence over CurbCheck's results.
 
