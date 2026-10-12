@@ -2,7 +2,7 @@
 
 Source: `data/tickets_block_agg.csv` — Downtown Vancouver, 2025-01-01 to 2026-06-30, 183,188 issued tickets across 383 100-blocks (water tickets removed; VPD-issued tickets not included). Ticket counts show where enforcement happened, not parking demand or the probability of a ticket.
 
-Status: DRAFT — needs review by a second team member before the demo.
+Status: Reviewed by Yan-Bo on 2026-10-11; figures checked against data/tickets_block_agg.csv.
 
 ## Insight 1 — Rush-hour tickets cluster on a few streets
 
