@@ -1,7 +1,7 @@
 # CurbCheck — Datathon Proposal (English v0.2)
 
 > Status: Draft v0.2 · Team of 3 · 3 build days · Demo Day: Tue 10/13
-> Direction update: the core is now a time-window street parking guide; ticket data becomes a supporting reference. The earlier version (driver block cards) is kept in `proposal_curbcheck.md`.
+> Direction update: the core is now a time-window street parking guide; ticket data becomes a supporting reference. The earlier version (driver block cards) is kept in the git history.
 > Event: Trilemma × Northeastern Datathon, Vancouver (rules TBC)
 
 ---

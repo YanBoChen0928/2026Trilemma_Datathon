@@ -182,7 +182,9 @@ left, right = st.columns([2, 3], gap="large")
 
 with left:
     st.subheader("Your stay")
-    st.caption("Tap the map to choose a destination, then set your arrival time and duration.")
+    st.caption(f"Tap the map, or use Advanced: enter coordinates, to check metered parking "
+               f"within {SEARCH_RADIUS_M} m of your destination. Then set your arrival time "
+               "and duration.")
     if state.dest:
         st.markdown(":green[**✓ Destination selected**]")
     else:
