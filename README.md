@@ -52,15 +52,15 @@ All data comes from the City of Vancouver Open Data portal. The Trilemma Foundat
 
 **Map.** Base map tiles and map data © OpenStreetMap contributors (https://www.openstreetmap.org/copyright).
 
-**Parking rules.** The by-laws, City pages, and Council records used to interpret parking rules are listed in `references.md`.
+**Parking rules.** The by-laws, City pages, and Council records used to interpret parking rules are listed in [`docs/references.md`](docs/references.md).
 
-Team conventions are in `CONTRIBUTING.md`.
+Team conventions are in [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md); planning and design documents are in [`docs/`](docs/).
 
 ## Driver View meter data
 
 `python -m curbcheck.meters` reads the meter snapshot in `data/raw/` and writes `data/meters_clean.csv` and `data/meters_preprocessing_report.json`.
 
-**Source:** City of Vancouver open data, `parking-meters`, snapshot downloaded 2026-10-11 19:11 UTC (3,642 records). After preprocessing, 2,760 records citywide (636 Downtown) can be evaluated by the rules engine; the report lists every reason a record was excluded. Rule interpretations and their official sources are in `references.md`, Section 5.
+**Source:** City of Vancouver open data, `parking-meters`, snapshot downloaded 2026-10-11 19:11 UTC (3,642 records). After preprocessing, 2,760 records citywide (636 Downtown) can be evaluated by the rules engine; the report lists every reason a record was excluded. Rule interpretations and their official sources are in [`docs/references.md`](docs/references.md), Section 5.
 
 ## Demo scenario
 
