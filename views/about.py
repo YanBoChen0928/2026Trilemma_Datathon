@@ -169,9 +169,9 @@ st.html(f"""
 </div>
 """)
 
+st.subheader("Project and data")
 st.html(f"""
 <div class="cc-project">
-  <p class="cc-about-h">Project and data</p>
   <p class="cc-about-t">Data: City of Vancouver Open Data, via the Trilemma Foundation data
   catalog, licensed under the <a class="cc-link" href="{LICENCE_URL}" target="_blank"
   rel="noopener">Open Government Licence – Vancouver</a>. Map data © OpenStreetMap
