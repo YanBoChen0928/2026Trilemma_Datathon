@@ -66,7 +66,7 @@ Both views live in **one Streamlit multipage app**, each in its own page file, s
 
 | Item | Agreement |
 | --- | --- |
-| Page files | Driver view: `pages/driver.py` (Yan-Bo); City view: `pages/city.py` (Anahid, Juwon) |
+| Page files | Driver view: `views/driver.py` (Yan-Bo); City view: `views/city.py` (Anahid, Juwon) |
 | Coordinates | WGS84 latitude/longitude (`lat`, `lon`) |
 | Map component | `folium` + `streamlit-folium`, OpenStreetMap tiles, centered on downtown Vancouver by default |
 | Data file format | CSV, stored in the `data/` folder |

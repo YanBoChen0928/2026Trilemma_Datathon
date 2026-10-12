@@ -56,8 +56,8 @@ YB 出問題時：`git diff main` 比對差異；`git restore --source=main <檔
 
 ```
 app.py                  # Streamlit 入口（你建立並維護）
-pages/driver.py         # 駕駛頁面（你）
-pages/city.py           # 市府頁面（Anahid、Juwon）
+views/driver.py         # 駕駛頁面（你）
+views/city.py           # 市府頁面（Anahid、Juwon）
 curbcheck/rules.py      # 規則引擎（純函式）
 curbcheck/meters.py     # 停車表前處理
 data/raw/               # 原始資料快照（註明下載日期）

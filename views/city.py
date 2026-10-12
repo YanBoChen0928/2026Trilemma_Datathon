@@ -54,7 +54,8 @@ def insights():
         r"^## Insight (\d+) — .+?\n(.*?)(?=^## |\Z)", md, flags=re.M | re.S)}
     status = re.search(r"^Status: (.+)$", md, flags=re.M)
     for item in blocks:
-        item["body"] = bodies.get(item["id"], "")
+        # ==phrase== in the Markdown marks a key phrase, shown with a light highlight.
+        item["body"] = re.sub(r"==(.+?)==", r":yellow-background[\1]", bodies.get(item["id"], ""))
     return blocks, status.group(1).strip() if status else None
 
 
@@ -111,7 +112,6 @@ insight_by_id = {i["id"]: i for i in insight_list}
 
 # --- Header -----------------------------------------------------------------------
 
-st.page_link("app.py", label="Home", icon="🏠")
 st.title("City View")
 st.caption("See meter rates and where tickets concentrate Downtown.")
 st.info(f"Ticket analysis covers Downtown Vancouver, {PERIOD}. "
@@ -124,7 +124,7 @@ with left:
     rate_label = st.radio("Meter rate shown", list(RATE_FIELDS))
     categories = tix.groupby("category")["count"].sum().sort_values(ascending=False).index.tolist()
     picked = st.multiselect("Infraction categories on the map", categories,
-                            placeholder="All categories")
+                            placeholder="All categories", wrap=True)
 rate_field = RATE_FIELDS[rate_label]
 
 shown_blocks = block_totals(tix[tix.category.isin(picked)]) if picked else all_blocks
@@ -251,9 +251,10 @@ st.subheader("Insights")
 st.caption("Precomputed from the ticket aggregate before the demo (not generated live); they "
            "describe where tickets were issued, not why."
            + (f" Review status: {insight_status}" if insight_status else ""))
+st.html("<style>[class*='st-key-cc_insight_'] > :last-child {margin-top: auto;}</style>")
 cols = st.columns(len(insight_list))
 for col, item in zip(cols, insight_list):
-    with col, st.container(border=True):
+    with col, st.container(border=True, height="stretch", key=f"cc_insight_{item['id']}"):
         active = state.city_insight == item["id"]
         st.markdown(f"**{item['title']}**")
         st.write(item["body"])
@@ -280,9 +281,4 @@ st.caption(
     "at the 100-block level, and tickets have a date but no time of day. VPD-issued tickets "
     "are not included. 98.4% of tickets were matched to a block (8,437 unmatched tickets are "
     "not mapped); 32,273 matched tickets citywide sit on blocks with estimated coordinates."
-)
-st.caption(
-    "Contains information licensed under the "
-    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
-    "Map data © OpenStreetMap contributors."
 )

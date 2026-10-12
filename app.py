@@ -1,30 +1,49 @@
-"""CurbCheck entry point.
+"""CurbCheck entry point: page setup, top navigation, and the shared footer.
 
 Run locally with:  streamlit run app.py
 """
 
 import streamlit as st
 
-st.set_page_config(page_title="CurbCheck", page_icon="🅿️", layout="wide")
+from views.icons import GITHUB_SVG, ICON_CSS
 
-st.title("CurbCheck")
-st.write(
-    "Vancouver's street parking rules switch by time of day. "
-    "CurbCheck helps drivers check whether a whole stay is legal and what it "
-    "will cost, and shows the City where its rules trip people up."
+REPO_URL = "https://github.com/YanBoChen0928/2026Trilemma_Datathon"
+LICENCE_URL = "https://opendata.vancouver.ca/pages/licence/"
+TRILEMMA_URL = "https://www.trilemma.foundation/"
+NEU_VANCOUVER_URL = "https://www.northeastern.edu/vancouver/"
+
+st.set_page_config(page_title="CurbCheck", page_icon="assets/favicon.png", layout="wide")
+st.logo("assets/logo.png", size="large")
+
+# Pages live in views/, not pages/: a pages/ folder would also trigger
+# Streamlit's automatic sidebar navigation on a cold start.
+page = st.navigation(
+    [
+        st.Page("views/home.py", title="Home", icon="🏠", default=True),
+        st.Page("views/driver.py", title="Driver View", icon="🚗"),
+        st.Page("views/city.py", title="City View", icon="🏙️"),
+        st.Page("views/about.py", title="About", icon="ℹ️"),
+    ],
+    position="top",
 )
+page.run()
 
-col1, col2 = st.columns(2)
-with col1:
-    st.page_link("pages/driver.py", label="Driver View", icon="🚗")
-    st.caption("Find street parking that is legal for your whole stay.")
-with col2:
-    st.page_link("pages/city.py", label="City View", icon="🏙️")
-    st.caption("See meter rates and where tickets concentrate Downtown.")
-
-st.info("Posted signs take precedence over CurbCheck's results.")
+# Shared footer, shown under every page.
+st.divider()
+st.html(
+    f"<style>{ICON_CSS} .cc-built {{font-size: 0.875rem; color: rgba(46, 52, 59, 0.6); margin: 0;}}"
+    " .cc-built a {color: inherit;}</style>"
+    '<p class="cc-built">Built by Anahid, Juwon, and Yan-Bo for the Trilemma × Northeastern '
+    f'Datathon, Vancouver 2026 · <a href="{REPO_URL}" target="_blank" rel="noopener">'
+    f"{GITHUB_SVG}GitHub</a></p>"
+)
+with st.container(horizontal=True, gap="small"):
+    st.page_link("views/about.py", label="About the team", icon=":material/group:")
+    st.page_link(TRILEMMA_URL, label="Trilemma Foundation", icon=":material/open_in_new:")
+    st.page_link(NEU_VANCOUVER_URL, label="Northeastern University Vancouver",
+                 icon=":material/open_in_new:")
 st.caption(
-    "Contains information licensed under the "
-    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
+    "Data: City of Vancouver Open Data, via the Trilemma Foundation data catalog. "
+    f"Contains information licensed under the [Open Government Licence – Vancouver]({LICENCE_URL}). "
     "Map data © OpenStreetMap contributors."
 )
