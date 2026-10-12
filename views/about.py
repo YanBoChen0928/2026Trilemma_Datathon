@@ -25,9 +25,10 @@ TEAM = [
         "photo": "team_anahid.jpg",
         "qr": "qr_anahid.png",
         "linkedin": "https://www.linkedin.com/in/anahid-raisrohani-8aa62182/",
-        "bio": "Built the ticket data pipeline: cleaning, de-duplication, block matching, and "
-               "infraction categories. Wrote the data-quality report and the first draft of the "
-               "City View insights.",
+        "bio": "Built a preprocessing pipeline to clean and combine City parking-ticket and "
+               "property-address datasets, match tickets to 100-block coordinates, and "
+               "categorize infractions. Created the data-quality report and scripts for "
+               "generating City View insights.",
     },
     {
         "name": "Juwon Park",
