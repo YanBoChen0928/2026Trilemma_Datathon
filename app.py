@@ -1,30 +1,36 @@
-"""CurbCheck entry point.
+"""CurbCheck entry point: page setup, top navigation, and the shared footer.
 
 Run locally with:  streamlit run app.py
 """
 
 import streamlit as st
 
-st.set_page_config(page_title="CurbCheck", page_icon="🅿️", layout="wide")
+REPO_URL = "https://github.com/YanBoChen0928/2026Trilemma_Datathon"
+LICENCE_URL = "https://opendata.vancouver.ca/pages/licence/"
 
-st.title("CurbCheck")
-st.write(
-    "Vancouver's street parking rules switch by time of day. "
-    "CurbCheck helps drivers check whether a whole stay is legal and what it "
-    "will cost, and shows the City where its rules trip people up."
+st.set_page_config(page_title="CurbCheck", page_icon="assets/favicon.png", layout="wide")
+st.logo("assets/logo.png", size="large")
+
+# Pages live in views/, not pages/: a pages/ folder would also trigger
+# Streamlit's automatic sidebar navigation on a cold start.
+page = st.navigation(
+    [
+        st.Page("views/home.py", title="Home", default=True),
+        st.Page("views/driver.py", title="Driver View", icon="🚗"),
+        st.Page("views/city.py", title="City View", icon="🏙️"),
+    ],
+    position="top",
 )
+page.run()
 
-col1, col2 = st.columns(2)
-with col1:
-    st.page_link("pages/driver.py", label="Driver View", icon="🚗")
-    st.caption("Find street parking that is legal for your whole stay.")
-with col2:
-    st.page_link("pages/city.py", label="City View", icon="🏙️")
-    st.caption("See meter rates and where tickets concentrate Downtown.")
-
-st.info("Posted signs take precedence over CurbCheck's results.")
+# Shared footer, shown under every page.
+st.divider()
 st.caption(
-    "Contains information licensed under the "
-    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
+    "Data: City of Vancouver Open Data, via the Trilemma Foundation data catalog. "
+    f"Contains information licensed under the [Open Government Licence – Vancouver]({LICENCE_URL}). "
     "Map data © OpenStreetMap contributors."
+)
+st.caption(
+    "Built by Anahid, Juwon, and Yan-Bo for the Trilemma × Northeastern Datathon, "
+    f"Vancouver 2026 · [GitHub]({REPO_URL})"
 )

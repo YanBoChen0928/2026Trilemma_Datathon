@@ -1,0 +1,17 @@
+[theme]
+base = "light"
+primaryColor = "#1e4e8c"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EEF0F2"
+textColor = "#2E343B"
+borderColor = "#D0D7DE"
+baseRadius = "0.5rem"
+redColor = "#cf222e"
+greenColor = "#1a7f37"
+yellowColor = "#bf8700"
+violetColor = "#8250df"
+blueColor = "#57606a"
+blueBackgroundColor = "#E1E4E8"
+
+[client]
+toolbarMode = "viewer"

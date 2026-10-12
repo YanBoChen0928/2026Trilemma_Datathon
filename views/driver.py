@@ -3,10 +3,12 @@
 Find street parking that is legal for the whole stay and estimate its cost.
 Spec: mvp_implementation_handoff_en.md, Sections 6–8.
 """
+import json
 import math
 import re
 from collections import Counter
 from datetime import date, datetime, time, timedelta
+from pathlib import Path
 
 import folium
 import streamlit as st
@@ -172,7 +174,6 @@ def status_of(candidate, recommended_ids):
 
 # --- Header and inputs ------------------------------------------------------------
 
-st.page_link("app.py", label="Home", icon="🏠")
 st.title("Driver View")
 st.caption("Find metered street parking that appears legal for your whole stay.")
 with st.expander("Demo tools"):
@@ -446,8 +447,22 @@ else:
         st.dataframe(rows, hide_index=True, width="stretch")
 
 st.info("Posted signs take precedence.")
+
+# --- Data period and limitations ---------------------------------------------------
+
+meter_report = json.loads((Path(__file__).resolve().parent.parent / "data"
+                           / "meters_preprocessing_report.json").read_text(encoding="utf-8"))
+st.divider()
+st.markdown("**Data period and limitations**")
 st.caption(
-    "Contains information licensed under the "
-    "[Open Government Licence – Vancouver](https://opendata.vancouver.ca/pages/licence/). "
-    "Map data © OpenStreetMap contributors."
+    "Meters: City of Vancouver open data (`parking-meters`), snapshot downloaded "
+    f"{meter_report['downloaded_at'][:10]} ({meter_report['total_records']:,} records; "
+    f"{meter_report['supported_records']:,} can be evaluated by the rules engine, and the rest "
+    "are excluded for missing or unsupported data)."
+)
+st.caption(
+    "Results use only the rates, time limits, and rush-hour restrictions listed for each meter. "
+    "They do not include posted or temporary signs, construction closures, or real-time space "
+    "availability, and unmetered street parking is not covered. Costs are estimates, and "
+    "distances are straight-line, not walking routes."
 )

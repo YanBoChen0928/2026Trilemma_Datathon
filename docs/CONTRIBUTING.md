@@ -21,9 +21,10 @@ This file is for the three of us. The `README.md` is for judges and first-time v
 ## 2. Project Structure
 
 ```
-app.py                  # Streamlit entry point
-pages/driver.py         # Driver View (Yan-Bo)
-pages/city.py           # City View (Anahid, Juwon)
+app.py                  # Streamlit entry point: navigation and shared footer
+views/home.py           # Home page
+views/driver.py         # Driver View (Yan-Bo)
+views/city.py           # City View (Anahid, Juwon)
 curbcheck/              # Shared Python modules (preprocessing, rules engine)
 data/raw/               # Raw source snapshots — NOT committed
 data/meters_clean.csv   # Produced by Driver View
@@ -86,7 +87,7 @@ CONTRIBUTING.md
 raw data (not committed)
    │
 preprocessing ──► data/*.csv ──┐
-app.py + pages/*.py ───────────┴──► main branch ──► auto deploy ──► public URL
+app.py + views/*.py ───────────┴──► main branch ──► auto deploy ──► public URL
 
 Backup: run locally + recorded demo video
 ```
