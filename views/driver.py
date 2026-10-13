@@ -406,7 +406,7 @@ else:
         tag, tag_colour, main, note = f"✓ Recommended #{n}", STATUS_STYLE[status][0], "", ""
     elif status == "legal":
         tag, tag_colour = "✓ Appears legal", STATUS_STYLE[status][0]
-        main = (f"Not in the top three: estimated {money(closest.result.estimated_cost)}, "
+        main = (f"Not in the top three: estimated ${closest.result.estimated_cost:.2f}, "
                 "more than the recommendations.")
         note = ""
     else:
@@ -416,7 +416,7 @@ else:
                "unsupported": "Data not supported"}[status]
         tag_colour = STATUS_STYLE["unsupported"][0] if status == "unsupported" else WARN
     st.markdown(
-        f"<div style='border-left:4px solid {tag_colour};padding:0.6rem 1rem;"
+        f"<div style='padding:0.6rem 1rem;"
         f"background:rgba(188,76,0,0.05);border-radius:4px'>"
         f"<div style='font-size:0.85rem;color:#57606a'>Closest meter</div>"
         f"<div style='font-weight:600'>{closest.meter.meter_id} · About "
