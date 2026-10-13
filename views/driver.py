@@ -62,9 +62,9 @@ def blocks():
     df["street"] = df["block_key"].str.split(n=1).str[1]
     df["number"] = df["block_key"].str.split(n=1).str[0].astype(int)
     df = df.sort_values(["street", "number"])
-    return {r.block_key: (float(r.lat), float(r.lon), r.local_area, bool(r.coord_estimated),
-                          f"{r.block_key.title()} · {r.local_area}")
-            for r in df.itertuples()}
+    return {key: (float(lat), float(lon), area, bool(est), f"{key.title()} · {area}")
+            for key, lat, lon, area, est in zip(df["block_key"], df["lat"], df["lon"],
+                                                 df["local_area"], df["coord_estimated"])}
 
 
 # --- Session state ----------------------------------------------------------------
@@ -234,7 +234,7 @@ with left:
     if state.duration_choice in (None, "Custom"):
         st.number_input("Custom duration (hours)", key="custom_hours",
                         min_value=0.25, max_value=24.0, step=0.25)
-    preset = DURATIONS.get(state.duration_choice)
+    preset = DURATIONS.get(state.duration_choice or "Custom")
     duration = preset if preset else int(round(state.custom_hours * 60))
     arrival = datetime.combine(state.arrival_date, state.arrival_time)
     departure = arrival + timedelta(minutes=duration)
@@ -247,9 +247,14 @@ with left:
         st.number_input("Longitude", key="adv_lon", format="%.6f")
         st.button("Use these coordinates", on_click=use_coordinates)
 
-result = find_parking(meters(), *state.dest, arrival, duration) if state.dest else None
+if state.dest:
+    dest_lat, dest_lon = state.dest
+    result = find_parking(meters(), dest_lat, dest_lon, arrival, duration)
+else:
+    result = None
 evaluated = bool(result and not result.scope_reason and result.candidates)
-rec_ids = {c.meter.object_id for c in result.recommendations} if evaluated else set()
+rec_ids = ({c.meter.object_id for c in result.recommendations} if result and evaluated
+           else set())
 empty = bool(result and not result.scope_reason and not result.candidates)
 pointer = nearest_supported_meter(*state.dest) if empty else None
 
@@ -265,7 +270,7 @@ with right:
                       icon=folium.Icon(color="blue", icon="flag")).add_to(layer)
         folium.Circle(state.dest, radius=SEARCH_RADIUS_M, color="#0969da",
                       weight=1, fill=False, dash_array="6").add_to(layer)
-    if evaluated:
+    if result and evaluated:
         rank = {c.meter.object_id: i for i, c in enumerate(result.recommendations, 1)}
         near, closest = result.closest_legal, result.closest
         for c in result.candidates:
@@ -275,16 +280,13 @@ with right:
             if status == "recommended":
                 continue  # drawn below, grouped by location
             elif c is near:
-                badge_marker(c.lat, c.lon, "★", colour, "white", colour,
-                             tooltip(f"Meter {c.meter.meter_id}", CLOSEST_LEGAL_LABEL,
-                                     f"Estimated ${c.result.estimated_cost:.2f}"), 900,
+                badge_marker(c.lat, c.lon, "★", colour, "white", colour, None, 900,
                              popup(c, f"★ Meter {c.meter.meter_id}",
                                    "Closest legal option")).add_to(layer)
             elif c is closest:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=9, color="white", weight=3, fill=True,
-                    fill_color=colour, fill_opacity=1,
-                    tooltip=tooltip(f"Closest meter · {c.meter.meter_id}", label, reason),
+                    fill_color=colour, fill_opacity=1, bubbling_mouse_events=False,
                     popup=folium.Popup(
                         f"<div style='font-size:13px;line-height:1.5'><b>Closest meter · "
                         f"{c.meter.meter_id}</b><br>About {c.distance_m:.0f} m away<br>"
@@ -294,11 +296,15 @@ with right:
             elif state.show_all:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=6, color=colour, fill=True,
-                    fill_opacity=0.6, weight=1,
-                    tooltip=tooltip(f"Meter {c.meter.meter_id}", label, reason),
+                    fill_opacity=0.6, weight=1, bubbling_mouse_events=False,
+                    popup=folium.Popup(
+                        f"<div style='font-size:13px;line-height:1.5'>"
+                        f"<b>Meter {c.meter.meter_id}</b><br>{label}"
+                        + (f"<br><i>{split_reason(reason)[0]}</i>" if reason else "")
+                        + "</div>", max_width=240),
                 ).add_to(layer)
 
-    if evaluated:
+    if result and evaluated:
         # Several meter records can share one block-face coordinate; draw one badge per spot.
         spots = {}
         for n, c in enumerate(result.recommendations, 1):
@@ -307,7 +313,6 @@ with right:
         for group in spots.values():
             first = group[0][1]
             label = "·".join(str(n) for n, _ in group)
-            names = ", ".join(f"#{n} {c.meter.meter_id}" for n, c in group)
             note = "Same block-face location in the data" if len(group) > 1 else ""
             pop = folium.Popup(
                 "<hr style='margin:4px 0'>".join(
@@ -316,7 +321,7 @@ with right:
                 + (f"<div style='font-size:12px;color:#57606a'><i>{note}</i></div>" if note else ""),
                 max_width=280)
             badge_marker(first.lat, first.lon, label, "white", green, "white",
-                         tooltip(names, "Recommended", note), 1000, pop).add_to(layer)
+                         None, 1000, pop).add_to(layer)
 
     if pointer:
         row, dist = pointer
@@ -353,9 +358,9 @@ with right:
     items.append((green, "★", "Closest legal option"))
     st.markdown(
         "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"
-        "gap:0.25rem 1rem;font-size:0.875rem;color:#6e7781'>"
+        "gap:0.25rem 1rem;font-size:0.875rem;color:#6e7781;margin-bottom:0.75rem'>"
         + "".join(f"<span style='white-space:nowrap'><span style='color:{c}'>{s}</span> "
-                  f"{l}</span>" for c, s, l in items)
+                  f"{text}</span>" for c, s, text in items)
         + "</div>", unsafe_allow_html=True)
     st.caption("Distances are approximate straight-line distances, not walking routes. "
                "Map data © OpenStreetMap contributors.")
@@ -365,7 +370,7 @@ with right:
 st.divider()
 st.subheader("Results")
 
-if not state.dest:
+if not state.dest or result is None:
     st.write("Search a block or tap the map to choose a destination, or open Demo tools to "
              "load the example.")
 elif result.scope_reason:
@@ -384,7 +389,8 @@ else:
     # Summary
     if recs:
         nearest = min(c.distance_m for c in recs)
-        cheapest = min(c.result.estimated_cost for c in recs)
+        cheapest = min(c.result.estimated_cost for c in recs
+                       if c.result.estimated_cost is not None)
         st.markdown(f"#### {len(recs)} option{'s' if len(recs) > 1 else ''} found")
         st.markdown(f"From **{money(cheapest)}** · Nearest recommendation about "
                     f"**{nearest:.0f} m** away")
@@ -397,13 +403,14 @@ else:
 
     # Closest meter card
     closest = result.closest
+    assert closest is not None  # candidates is non-empty in this branch
     status = status_of(closest, rec_ids)
     if status == "recommended":
         n = [c.meter.object_id for c in recs].index(closest.meter.object_id) + 1
         tag, tag_colour, main, note = f"✓ Recommended #{n}", STATUS_STYLE[status][0], "", ""
     elif status == "legal":
         tag, tag_colour = "✓ Appears legal", STATUS_STYLE[status][0]
-        main = (f"Not in the top three: estimated {money(closest.result.estimated_cost)}, "
+        main = (f"Not in the top three: estimated ${closest.result.estimated_cost:.2f}, "
                 "more than the recommendations.")
         note = ""
     else:
@@ -413,7 +420,7 @@ else:
                "unsupported": "Data not supported"}[status]
         tag_colour = STATUS_STYLE["unsupported"][0] if status == "unsupported" else WARN
     st.markdown(
-        f"<div style='border-left:4px solid {tag_colour};padding:0.6rem 1rem;"
+        f"<div style='padding:0.6rem 1rem;"
         f"background:rgba(188,76,0,0.05);border-radius:4px'>"
         f"<div style='font-size:0.85rem;color:#57606a'>Closest meter</div>"
         f"<div style='font-weight:600'>{closest.meter.meter_id} · About "

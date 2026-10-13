@@ -149,7 +149,9 @@ meters_checked, downtown_tickets = key_numbers()
 with st.container(key="cc_numbers"):
     m1, m2, m3 = st.columns(3)
     m1.metric("Parking meters checked", f"{meters_checked:,}")
+    m1.caption("citywide, Oct 11, 2026 snapshot")
     m2.metric("Downtown parking tickets", f"{downtown_tickets:,}")
+    m2.caption("Jan 2025 – Jun 2026")
     m3.metric("Search radius", f"{SEARCH_RADIUS_M} m")
     m3.caption("around your destination")
 
