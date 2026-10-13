@@ -286,7 +286,7 @@ with right:
             elif c is closest:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=9, color="white", weight=3, fill=True,
-                    fill_color=colour, fill_opacity=1,
+                    fill_color=colour, fill_opacity=1, bubbling_mouse_events=False,
                     popup=folium.Popup(
                         f"<div style='font-size:13px;line-height:1.5'><b>Closest meter · "
                         f"{c.meter.meter_id}</b><br>About {c.distance_m:.0f} m away<br>"
@@ -296,8 +296,12 @@ with right:
             elif state.show_all:
                 folium.CircleMarker(
                     (c.lat, c.lon), radius=6, color=colour, fill=True,
-                    fill_opacity=0.6, weight=1,
-                    tooltip=tooltip(f"Meter {c.meter.meter_id}", label, reason),
+                    fill_opacity=0.6, weight=1, bubbling_mouse_events=False,
+                    popup=folium.Popup(
+                        f"<div style='font-size:13px;line-height:1.5'>"
+                        f"<b>Meter {c.meter.meter_id}</b><br>{label}"
+                        + (f"<br><i>{split_reason(reason)[0]}</i>" if reason else "")
+                        + "</div>", max_width=240),
                 ).add_to(layer)
 
     if result and evaluated:
@@ -354,7 +358,7 @@ with right:
     items.append((green, "★", "Closest legal option"))
     st.markdown(
         "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"
-        "gap:0.25rem 1rem;font-size:0.875rem;color:#6e7781'>"
+        "gap:0.25rem 1rem;font-size:0.875rem;color:#6e7781;margin-bottom:0.75rem'>"
         + "".join(f"<span style='white-space:nowrap'><span style='color:{c}'>{s}</span> "
                   f"{text}</span>" for c, s, text in items)
         + "</div>", unsafe_allow_html=True)
