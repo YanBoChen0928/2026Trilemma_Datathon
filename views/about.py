@@ -54,8 +54,14 @@ TEAM = [
 STYLE = """
 <style>
 """ + ICON_CSS + """
-.cc-about-head {background: #2E343B; border-radius: 12px; padding: clamp(1.25rem, 4vw, 2rem);}
+.cc-about-head {background: #2E343B; border-radius: 12px; padding: clamp(1.25rem, 4vw, 2rem);
+                display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;}
 .cc-about-head p {margin: 0;}
+.cc-app-qr {flex: none; background: #FFFFFF; border-radius: 10px; padding: 0.6rem 0.6rem 0.5rem;
+            text-align: center; color: #57606a; font-size: 0.75rem; line-height: 1.4;}
+.cc-app-qr img {width: 160px; height: 160px; display: block; image-rendering: pixelated;}
+.cc-app-qr strong {color: #2E343B;}
+@media (max-width: 640px) {.cc-app-qr {display: none;}}
 .cc-about-title {color: #F3F5F7; font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 700;}
 .cc-about-lede {color: #C9CED3; font-size: 1.05rem; line-height: 1.6; margin-top: 0.5rem !important;
                 text-wrap: pretty;}
@@ -126,11 +132,15 @@ def member_card(m):
 </div>"""
 
 
-st.html(STYLE + """
+st.html(STYLE + f"""
 <div class="cc-about-head">
-  <p class="cc-about-title">About CurbCheck</p>
-  <p class="cc-about-lede">A microproduct built for the Trilemma × Northeastern Datathon,
-  Vancouver 2026, turning City of Vancouver open data into clear parking decisions.</p>
+  <div>
+    <p class="cc-about-title">About CurbCheck</p>
+    <p class="cc-about-lede">A microproduct built for the Trilemma × Northeastern Datathon,
+    Vancouver 2026, turning City of Vancouver open data into clear parking decisions.</p>
+  </div>
+  <div class="cc-app-qr"><img src="{data_uri('qr_app.png')}" alt="QR code for curbcheck.streamlit.app">
+    <strong>Scan to try it</strong><br>curbcheck.streamlit.app</div>
 </div>
 """)
 
