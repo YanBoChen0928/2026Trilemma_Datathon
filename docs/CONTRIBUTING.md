@@ -45,6 +45,7 @@ CONTRIBUTING.md
 | Map | `folium` + `streamlit-folium` on OpenStreetMap tiles, with attribution |
 | Paths | Relative paths inside the repo only; never hard-code a local machine path |
 | File ownership | Each person edits only their own page and scripts; `app.py` and `requirements.txt` are maintained by the integration owner |
+| QR codes | The CurbCheck app QR (About header) is shown on all screen sizes (120px and centered on mobile). Team LinkedIn QR codes are hidden below 640px; on mobile, use the LinkedIn link instead |
 
 ## 4. Data Files
 
